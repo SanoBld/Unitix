@@ -42,6 +42,7 @@
                     <i class="ph ph-calendar-plus"></i>
                     <span>Dates</span>
                 </button>
+                <div class="spacer"></div>
                 <button class="nav-btn" data-target="settings">
                     <i class="ph ph-gear"></i>
                     <span>Réglages</span>
@@ -50,16 +51,31 @@
         </nav>
 
         <main class="content-area">
+            <div id="notepad-container" class="notepad-wrapper" style="display:none;">
+                <textarea id="notepad-area" placeholder="Notes rapides..."></textarea>
+            </div>
+
             <section id="converter" class="page active" style="display: block;">
                 <div class="header-card">
-                    <h1>Convertisseur</h1>
-                    <p>Précision et détails des unités.</p>
+                    <h1>Unités</h1>
+                    <p>Conversions de mesures physiques.</p>
                 </div>
                 <div class="card">
                     <div class="input-group">
-                        <label>Valeur à convertir</label>
-                        <input type="number" id="unit-input" placeholder="Entrez un nombre..." inputmode="decimal">
+                        <label>Valeur</label>
+                        <input type="number" id="unit-input" placeholder="0" inputmode="decimal">
                     </div>
+                    
+                    <div class="input-group">
+                        <div class="category-tabs" id="unit-cats">
+                            <button class="cat-btn active" data-cat="Longueur">📏 Longueur</button>
+                            <button class="cat-btn" data-cat="Masse">⚖️ Masse</button>
+                            <button class="cat-btn" data-cat="Température">🌡️ Temp.</button>
+                            <button class="cat-btn" data-cat="Volume">💧 Volume</button>
+                            <button class="cat-btn" data-cat="Vitesse">🚀 Vitesse</button>
+                        </div>
+                    </div>
+
                     <div class="conversion-row">
                         <div class="select-box">
                             <span class="label-mini">DE</span>
@@ -74,29 +90,88 @@
                         </div>
                     </div>
                     <div class="input-group result-group">
-                        <label>Résultat converti</label>
-                        <input type="text" id="unit-output" readonly placeholder="0.00" style="font-weight: 700; color: var(--primary);">
+                        <label>Résultat</label>
+                        <input type="text" id="unit-output" readonly placeholder="0.00" class="copyable">
+                    </div>
+                </div>
+            </section>
+
+            <section id="currency" class="page">
+                <div class="header-card">
+                    <h1>Devises</h1>
+                    <p>Taux de change en temps réel.</p>
+                </div>
+                <div class="card">
+                     <div class="input-group">
+                        <label>Montant</label>
+                        <input type="number" id="curr-input" placeholder="1.00" inputmode="decimal">
+                    </div>
+                    <div class="conversion-row">
+                        <div class="select-box">
+                            <span class="label-mini">DE</span>
+                            <select id="curr-from"></select>
+                        </div>
+                        <button id="btn-swap-curr" class="swap-btn"><i class="ph ph-arrows-left-right"></i></button>
+                        <div class="select-box">
+                            <span class="label-mini">VERS</span>
+                            <select id="curr-to"></select>
+                        </div>
+                    </div>
+                    <div class="input-group result-group">
+                        <label>Montant converti</label>
+                        <input type="text" id="curr-output" readonly placeholder="..." class="copyable">
+                        <div id="curr-rate-info" style="font-size: 0.8rem; color: var(--text-sub); margin-top: 5px; text-align: right;"></div>
                     </div>
                 </div>
             </section>
 
             <section id="calculator" class="page">
+                <div class="calc-top-bar">
+                    <div class="mode-switch">
+                        <button class="mode-btn active" data-mode="standard">Standard</button>
+                        <button class="mode-btn" data-mode="scientific">Scientifique</button>
+                    </div>
+                </div>
                 <div class="calc-wrapper">
                     <div class="calc-screen">
-                        <div id="calc-history"></div>
-                        <input type="text" id="calc-display" readonly value="0">
+                        <div id="calc-history-list">
+                            </div>
+                        <div class="current-op">
+                            <div id="calc-preview"></div>
+                            <input type="text" id="calc-display" readonly value="0" class="copyable">
+                        </div>
                     </div>
-                    <div id="calc-grid" class="calc-grid">
+                    <div id="calc-grid" class="calc-grid standard-layout">
                         </div>
                 </div>
             </section>
 
-            <section id="currency" class="page">
-               <div class="header-card"><h1>Devises</h1><p>Module en construction...</p></div>
-            </section>
-            
             <section id="datecalc" class="page">
-               <div class="header-card"><h1>Dates</h1><p>Module en construction...</p></div>
+               <div class="header-card"><h1>Dates</h1><p>Calculer la durée entre deux moments.</p></div>
+               <div class="card">
+                   <div class="input-group">
+                       <label>Date de début</label>
+                       <input type="date" id="date-start">
+                   </div>
+                   <div class="input-group">
+                       <label>Date de fin</label>
+                       <input type="date" id="date-end">
+                   </div>
+                   <button id="btn-calc-date" class="action-btn">Calculer la différence</button>
+                   
+                   <div class="result-box mt-20">
+                       <div class="date-res">
+                           <span id="res-years">0</span> ans
+                       </div>
+                       <div class="date-res">
+                           <span id="res-months">0</span> mois
+                       </div>
+                       <div class="date-res">
+                           <span id="res-days">0</span> jours
+                       </div>
+                       <p id="res-total-days" style="text-align: center; color: var(--text-sub); margin-top: 10px; font-size: 0.9rem;">(Total: 0 jours)</p>
+                   </div>
+               </div>
             </section>
 
             <section id="settings" class="page">
@@ -105,11 +180,11 @@
                 </div>
                 <div class="card settings-card">
                     <div class="setting-row">
-                        <span>Thème de l'application</span>
+                        <span>Thème</span>
                         <select id="theme-select">
                             <option value="light">Clair</option>
                             <option value="dark">Sombre</option>
-                            <option value="auto">Système (Auto)</option>
+                            <option value="auto">Système</option>
                         </select>
                     </div>
 
@@ -126,19 +201,36 @@
                     </div>
 
                     <div class="setting-row">
-                        <span>Vibrations (Haptique)</span>
+                        <span>Bloc-notes sur l'accueil</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-notepad">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-row">
+                        <span>Vibrations (Mobile)</span>
                         <label class="switch">
                             <input type="checkbox" id="toggle-haptic" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
                     
-                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+                    <div class="setting-row">
+                        <span>Empêcher la veille (Wake Lock)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-wake">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                     
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
                     <button id="btn-reset" class="btn-danger">Réinitialiser l'application</button>
                 </div>
             </section>
         </main>
+        
+        <div id="toast" class="toast">Copié dans le presse-papier !</div>
     </div>
     <script src="script.js"></script>
 </body>
