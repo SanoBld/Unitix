@@ -1,411 +1,504 @@
-// --- ENREGISTREMENT SERVICE WORKER (PWA) ---
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Unitix SW Registered'))
-        .catch(err => console.error('SW Error:', err));
-}
+/* --- UNITIX V2.2 CORE --- */
 
-// --- ÉTAT GLOBAL & CONFIG ---
 const state = {
-    theme: localStorage.getItem('u-theme') || 'auto',
-    accent: localStorage.getItem('u-accent') || '#007AFF',
-    haptic: localStorage.getItem('u-haptic') !== 'false', // Default true
-    sidebar: localStorage.getItem('u-sidebar') === 'true'
+    theme: localStorage.getItem('ux-theme') || 'auto',
+    haptic: localStorage.getItem('ux-haptic') !== 'false',
+    showNotes: localStorage.getItem('ux-notes') === 'true',
+    wakeLock: localStorage.getItem('ux-wakelock') === 'true',
+    calcMode: localStorage.getItem('ux-calc-mode') || 'std',
+    history: JSON.parse(localStorage.getItem('ux-history') || '[]')
 };
+
+let wakeLockSentinel = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    applyTheme(state.theme);
-    applyAccent(state.accent);
-    if(state.sidebar) document.getElementById('sidebar').classList.add('collapsed');
-    document.getElementById('toggle-haptic').checked = state.haptic;
-    
+    initTheme();
     initNavigation();
-    initSettings();
-    initUnits();
+    initConverter();
     initCurrency();
     initCalculator();
-    initNotes();
+    initDateCalc();
+    initSettings();
+    initSystem();
 });
 
-/* --- UTILITAIRES --- */
-const formatNumber = (num) => {
-    if (num === '' || num === null) return '';
-    const n = parseFloat(num);
-    if (isNaN(n)) return 'Erreur';
-    // Évite les 0.300000004
-    return parseFloat(n.toFixed(10)).toString(); 
-};
+/* --- UTILS --- */
+const isMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const vibrate = () => { if(state.haptic && isMobile() && navigator.vibrate) navigator.vibrate(10); };
 
-// --- RETOUR HAPTIQUE AVANCÉ ---
-const vibrate = (type = 'click') => {
-    if (!state.haptic || !navigator.vibrate) return;
-    
-    const patterns = {
-        click: 10,
-        success: [10, 30, 10],
-        error: [50, 30, 50]
-    };
-
-    navigator.vibrate(patterns[type] || 10);
-};
-
-/* --- THEME & REGLAGES --- */
-function applyTheme(mode) {
-    const root = document.documentElement;
-    if (mode === 'auto') {
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    } else {
-        root.setAttribute('data-theme', mode);
-    }
+function showToast(msg = "Copié !") {
+    const t = document.getElementById('toast');
+    t.querySelector('span').innerText = msg;
+    t.classList.add('visible');
+    setTimeout(() => t.classList.remove('visible'), 2000);
 }
 
-function applyAccent(color) {
-    document.documentElement.style.setProperty('--primary', color);
-    document.querySelectorAll('.color-dot').forEach(d => {
-        d.classList.toggle('active', d.dataset.color === color);
+function copyToClipboard(text) {
+    if(!text || text === '0') return;
+    navigator.clipboard.writeText(text).then(() => {
+        showToast();
+        vibrate();
     });
 }
 
-function initSettings() {
-    // Thème
-    document.querySelectorAll('.seg-btn').forEach(btn => {
-        if(btn.dataset.mode === state.theme) btn.classList.add('active');
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.theme = btn.dataset.mode;
-            localStorage.setItem('u-theme', state.theme);
-            applyTheme(state.theme);
-            vibrate('click');
-        });
-    });
-
-    // Accent
-    document.querySelectorAll('.color-dot').forEach(dot => {
-        dot.addEventListener('click', () => {
-            state.accent = dot.dataset.color;
-            localStorage.setItem('u-accent', state.accent);
-            applyAccent(state.accent);
-            vibrate('success');
-        });
-    });
-
-    // Haptique
-    document.getElementById('toggle-haptic').addEventListener('change', (e) => {
-        state.haptic = e.target.checked;
-        localStorage.setItem('u-haptic', state.haptic);
-        if(state.haptic) vibrate('success');
-    });
-
-    // Sidebar
-    document.getElementById('collapse-btn').addEventListener('click', () => {
-        const bar = document.getElementById('sidebar');
-        bar.classList.toggle('collapsed');
-        state.sidebar = bar.classList.contains('collapsed');
-        localStorage.setItem('u-sidebar', state.sidebar);
-    });
-
-    // Reset
-    document.getElementById('btn-reset').addEventListener('click', () => {
-        if(confirm("Réinitialiser l'application ?")) {
-            localStorage.clear();
-            vibrate('error');
-            setTimeout(() => location.reload(), 200);
+/* --- THEME & SYSTEM --- */
+function initTheme() {
+    const apply = () => {
+        const root = document.documentElement;
+        if(state.theme === 'auto') {
+            root.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        } else {
+            root.setAttribute('data-theme', state.theme);
         }
+    };
+    apply();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', apply);
+    
+    document.querySelectorAll('.seg-item[data-theme]').forEach(btn => {
+        if(btn.dataset.theme === state.theme) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.seg-item[data-theme]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.theme = btn.dataset.theme;
+            localStorage.setItem('ux-theme', state.theme);
+            apply();
+            vibrate();
+        });
+    });
+}
+
+async function initSystem() {
+    // Wake Lock for PWA
+    const applyWakeLock = async () => {
+        if(state.wakeLock && 'wakeLock' in navigator) {
+            try { wakeLockSentinel = await navigator.wakeLock.request('screen'); } 
+            catch(err) { console.log('WakeLock error', err); }
+        } else if(wakeLockSentinel) {
+            wakeLockSentinel.release(); wakeLockSentinel = null;
+        }
+    };
+    applyWakeLock();
+    document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') applyWakeLock(); });
+    
+    // Copy Triggers
+    document.querySelectorAll('.copy-trigger').forEach(el => {
+        el.addEventListener('click', () => copyToClipboard(el.value || el.innerText));
     });
 }
 
 /* --- NAVIGATION --- */
 function initNavigation() {
-    const navBtns = document.querySelectorAll('.nav-btn[data-target]');
-    navBtns.forEach(btn => {
+    const navs = document.querySelectorAll('.nav-item');
+    const views = document.querySelectorAll('.view');
+    const layout = document.querySelector('.app-layout');
+    
+    navs.forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.nav-btn, .panel').forEach(el => el.classList.remove('active'));
+            const targetId = btn.dataset.target;
+            if(!targetId) return;
+            navs.forEach(n => n.classList.remove('active'));
+            views.forEach(v => v.classList.remove('active'));
             btn.classList.add('active');
             
-            const target = document.getElementById(btn.dataset.target);
-            target.style.display = 'block';
-            setTimeout(() => target.classList.add('active'), 10);
+            const target = document.getElementById(targetId);
+            target.classList.add('active');
             
-            vibrate('click');
+            // Gestion Zero Scroll pour la calculatrice mobile
+            if(targetId === 'panel-calc') {
+                target.classList.add('full-height-view');
+                if(isMobile()) document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+
+            // Reset Animation
+            target.style.animation = 'none';
+            target.offsetHeight; /* trigger reflow */
+            target.style.animation = 'fadeIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            
+            if(isMobile()) vibrate();
         });
     });
 }
 
-/* --- CONVERTISSEUR PRO & FILTRES --- */
-const unitData = {
+/* --- CALCULATOR ENGINE (WINDOWS STYLE) --- */
+function initCalculator() {
+    const grid = document.getElementById('calc-grid');
+    const displayCurr = document.getElementById('calc-current');
+    const displayPrev = document.getElementById('calc-history-prev');
+    const tapeList = document.getElementById('calc-tape-list');
+    const tapePanel = document.querySelector('.calc-tape-panel');
+    const layout = document.querySelector('.app-layout');
+    
+    let buffer = '0'; // Le nombre en cours de frappe
+    let stored = null; // Le nombre stocké avant l'opération
+    let operator = null; // L'opérateur en attente
+    let lastKeyWasOp = false;
+    let resultDisplayed = false;
+
+    // Mode Switch
+    const setMode = (mode) => {
+        state.calcMode = mode;
+        localStorage.setItem('ux-calc-mode', mode);
+        layout.setAttribute('data-calc-mode', mode); // Utilisation d'attribut pour le CSS
+        document.querySelectorAll('[data-calc-mode]').forEach(b => {
+            b.classList.toggle('active', b.dataset.calcMode === mode);
+        });
+    };
+    setMode(state.calcMode);
+    document.querySelectorAll('[data-calc-mode]').forEach(b => b.addEventListener('click', () => {
+        setMode(b.dataset.calcMode); vibrate();
+    }));
+
+    // Update UI
+    const updateUI = () => {
+        let view = buffer;
+        if(buffer !== 'Erreur') {
+            const parts = buffer.split('.');
+            parts[0] = parseFloat(parts[0]).toLocaleString('fr-FR');
+            view = parts.join(','); 
+        }
+        displayCurr.innerText = view;
+        displayPrev.innerText = (stored !== null ? `${parseFloat(stored).toLocaleString('fr-FR')} ${operatorToString(operator)}` : '');
+    };
+
+    const operatorToString = (op) => {
+        switch(op) {
+            case '*': return '×'; case '/': return '÷'; case 'powY': return '^'; default: return op || '';
+        }
+    };
+
+    const addToTape = (text, res) => {
+        const div = document.createElement('div');
+        div.className = 'tape-item';
+        div.innerText = `${text} = ${parseFloat(res).toLocaleString('fr-FR')}`;
+        tapeList.prepend(div);
+        tapePanel.classList.add('show');
+    };
+
+    const calculate = (a, b, op) => {
+        const n1 = parseFloat(a);
+        const n2 = parseFloat(b);
+        switch(op) {
+            case '+': return n1 + n2;
+            case '-': return n1 - n2;
+            case '*': return n1 * n2;
+            case '/': return n2 === 0 ? 'Erreur' : n1 / n2;
+            case 'powY': return Math.pow(n1, n2);
+            default: return n2;
+        }
+    };
+
+    const handleInput = (val, type, opData) => {
+        vibrate();
+
+        if (type === 'num') {
+            if (resultDisplayed) { buffer = '0'; resultDisplayed = false; stored = null; operator = null; }
+            if (lastKeyWasOp) { buffer = '0'; lastKeyWasOp = false; }
+            
+            if (val === '.') {
+                if (!buffer.includes('.')) buffer += '.';
+            } else if (val === 'neg') {
+                buffer = (parseFloat(buffer) * -1).toString();
+            } else {
+                buffer = buffer === '0' ? val : buffer + val;
+            }
+        } 
+        else if (type === 'op') {
+            const op = opData;
+            if (operator && !lastKeyWasOp && stored !== null) {
+                const res = calculate(stored, buffer, operator);
+                buffer = res.toString();
+                addToTape(`${parseFloat(stored).toLocaleString()} ${operatorToString(operator)} ${parseFloat(buffer).toLocaleString()}`, buffer);
+            }
+            stored = buffer;
+            operator = op;
+            lastKeyWasOp = true;
+            resultDisplayed = false;
+        }
+        else if (type === 'action') { // Equals
+            if (operator && stored !== null) {
+                const res = calculate(stored, buffer, operator);
+                addToTape(`${parseFloat(stored).toLocaleString()} ${operatorToString(operator)} ${parseFloat(buffer).toLocaleString()}`, res);
+                stored = null; operator = null;
+                buffer = res.toString();
+                resultDisplayed = true;
+            }
+        }
+        else if (type === 'func') {
+            const key = opData;
+            if (key === 'AC') {
+                buffer = '0'; stored = null; operator = null; resultDisplayed = false;
+            } else if (key === 'DEL') {
+                if(!resultDisplayed) {
+                    buffer = buffer.length > 1 ? buffer.slice(0, -1) : '0';
+                }
+            } else if (key === 'percent') {
+                // Windows Logic Stricte
+                // Si operator est + ou -, % applique le pourcentage sur le nombre stocké
+                // Ex: 100 + 10 % = 110 (10 devient 10)
+                // Si operator est * ou /, % divise juste par 100
+                if (operator === '+' || operator === '-') {
+                    const base = parseFloat(stored);
+                    const perc = parseFloat(buffer);
+                    const val = base * (perc / 100);
+                    buffer = val.toString();
+                    // On ne calcule pas tout de suite, on laisse l'utilisateur voir le chiffre calculé
+                } else {
+                    buffer = (parseFloat(buffer) / 100).toString();
+                }
+            }
+        }
+        else if (type === 'sci') {
+            const func = opData;
+            const n = parseFloat(buffer);
+            let res = n;
+            switch(func) {
+                case 'sin': res = Math.sin(n); break;
+                case 'cos': res = Math.cos(n); break;
+                case 'tan': res = Math.tan(n); break;
+                case 'ln': res = Math.log(n); break;
+                case 'log': res = Math.log10(n); break;
+                case 'sqrt': res = Math.sqrt(n); break;
+                case 'pow2': res = Math.pow(n, 2); break;
+                case 'fact': 
+                    const f = (num) => num < 0 ? NaN : (num <= 1 ? 1 : num * f(num-1));
+                    res = f(Math.floor(n)); 
+                    break;
+            }
+            buffer = res.toString();
+            resultDisplayed = true;
+        }
+        updateUI();
+    };
+
+    // Click Events
+    grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if(!btn) return;
+        
+        if (btn.classList.contains('num')) handleInput(btn.dataset.key, 'num');
+        if (btn.classList.contains('op')) handleInput(null, 'op', btn.dataset.key);
+        if (btn.classList.contains('action')) handleInput(null, 'action');
+        if (btn.classList.contains('func')) {
+            if(btn.dataset.op === 'percent') handleInput(null, 'func', 'percent');
+            else handleInput(null, 'func', btn.dataset.key);
+        }
+        if (btn.classList.contains('sci-key')) {
+            if(btn.dataset.op === 'powY') handleInput(null, 'op', 'powY');
+            else handleInput(null, 'sci', btn.dataset.op);
+        }
+    });
+
+    // Keyboard Mapping (Physical)
+    document.addEventListener('keydown', (e) => {
+        const key = e.key;
+        // Seulement si la calculatrice est visible
+        if(!document.getElementById('panel-calc').classList.contains('active')) return;
+        
+        e.preventDefault(); // Prevents defaults on calculator keys
+
+        if (/[0-9]/.test(key)) handleInput(key, 'num');
+        if (key === '.' || key === ',') handleInput('.', 'num');
+        if (key === 'Enter' || key === '=') handleInput(null, 'action');
+        if (key === 'Backspace') handleInput(null, 'func', 'DEL');
+        if (key === 'Escape') handleInput(null, 'func', 'AC');
+        if (['+','-','*','/'].includes(key)) handleInput(null, 'op', key);
+        if (key === '%') handleInput(null, 'func', 'percent');
+    });
+}
+
+/* --- DATE CALCULATOR --- */
+function initDateCalc() {
+    const startIn = document.getElementById('date-start');
+    const endIn = document.getElementById('date-end');
+    const btn = document.getElementById('btn-calc-date');
+    const resultBox = document.getElementById('date-result');
+    const txtMain = document.getElementById('date-diff-text');
+    const txtSub = document.getElementById('date-diff-details');
+
+    // Default dates
+    startIn.valueAsDate = new Date();
+    const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
+    endIn.valueAsDate = tmr;
+
+    btn.addEventListener('click', () => {
+        vibrate();
+        const d1 = new Date(startIn.value);
+        const d2 = new Date(endIn.value);
+        
+        if(!d1 || !d2) return;
+
+        // Reset hours
+        d1.setHours(12,0,0,0);
+        d2.setHours(12,0,0,0);
+
+        const diffTime = d2 - d1;
+        const totalDays = Math.ceil(Math.abs(diffTime) / (1000 * 60 * 60 * 24)); 
+        
+        // Precise Y/M/D Calculation
+        let years = d2.getFullYear() - d1.getFullYear();
+        let months = d2.getMonth() - d1.getMonth();
+        let days = d2.getDate() - d1.getDate();
+
+        if (days < 0) {
+            months--;
+            // Jours dans le mois précédent
+            days += new Date(d2.getFullYear(), d2.getMonth(), 0).getDate();
+        }
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        const isPast = diffTime < 0;
+        const mainText = `${totalDays} jours`;
+        
+        let details = [];
+        if(Math.abs(years) > 0) details.push(`${Math.abs(years)} an${Math.abs(years)>1?'s':''}`);
+        if(Math.abs(months) > 0) details.push(`${Math.abs(months)} mois`);
+        if(Math.abs(days) > 0) details.push(`${Math.abs(days)} jour${Math.abs(days)>1?'s':''}`);
+        
+        if(details.length === 0) details.push("Même jour");
+
+        txtMain.innerText = mainText;
+        txtSub.innerText = `${isPast ? 'Il y a ' : 'Dans '}${details.join(', ')}`;
+        resultBox.classList.remove('hidden');
+    });
+}
+
+/* --- CONVERTER & CURRENCY --- */
+const UNITS = {
     length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.34, yd: 0.9144, ft: 0.3048, in: 0.0254 },
     mass: { kg: 1, g: 0.001, t: 1000, lb: 0.453592, oz: 0.0283495 },
-    volume: { l: 1, ml: 0.001, m3: 1000, gal: 3.78541, pt: 0.473176 },
-    speed: { "km/h": 1, mph: 1.60934, "m/s": 3.6, kn: 1.852 },
-    pressure: { Pa: 1, bar: 100000, psi: 6894.76, atm: 101325 },
-    energy: { J: 1, cal: 4.184, kWh: 3.6e6 },
-    angle: { deg: 1, rad: 57.2958 },
+    volume: { l: 1, ml: 0.001, m3: 1000, gal: 3.78541 },
+    temperature: { type: 'special' },
     data: { B: 1, KB: 1024, MB: 1048576, GB: 1073741824, TB: 1099511627776 },
-    cooking: { ml: 1, tsp: 4.92, tbsp: 14.78, cup: 236.58, fl_oz: 29.57 },
-    temperature: { type: 'special' }
+    speed: { "km/h": 1, mph: 1.60934, "m/s": 3.6, kn: 1.852 },
+    cooking: { ml: 1, tsp: 4.92, tbsp: 14.78, cup: 236.58 },
+    pressure: { Pa: 1, bar: 100000, psi: 6894.76 },
+    energy: { J: 1, cal: 4.184, kWh: 3.6e6 },
+    angle: { deg: 1, rad: 57.2958 }
 };
 
-function initUnits() {
+function initConverter() {
     const cat = document.getElementById('unit-category');
-    const from = document.getElementById('unit-from');
-    const to = document.getElementById('unit-to');
-    const input = document.getElementById('unit-input');
-    const output = document.getElementById('unit-output');
-    const search = document.getElementById('unit-search');
+    const uFrom = document.getElementById('unit-from');
+    const uTo = document.getElementById('unit-to');
+    const uIn = document.getElementById('unit-input');
+    const uOut = document.getElementById('unit-output');
+    
+    // Notes Logic
+    const noteArea = document.getElementById('home-notes-area');
+    const notePad = document.getElementById('quick-note');
+    const toggleNotes = () => {
+        noteArea.classList.toggle('hidden', !state.showNotes);
+        notePad.value = localStorage.getItem('ux-note-content') || '';
+    };
+    notePad.addEventListener('input', () => localStorage.setItem('ux-note-content', notePad.value));
+    window.updateNoteVisibility = toggleNotes;
+    toggleNotes();
 
-    const updateOptions = () => {
+    const populate = () => {
         const type = cat.value;
-        let units = [];
-        if (type === 'temperature') units = ['Celsius', 'Fahrenheit', 'Kelvin'];
-        else units = Object.keys(unitData[type]);
-        
-        const html = units.map(u => `<option value="${u}">${u}</option>`).join('');
-        from.innerHTML = html;
-        to.innerHTML = html;
-        to.selectedIndex = 1;
-        search.value = '';
-        filterUnits(''); 
-        calculate();
+        const keys = type === 'temperature' ? ['Celsius', 'Fahrenheit', 'Kelvin'] : Object.keys(UNITS[type]);
+        const html = keys.map(k => `<option value="${k}">${k}</option>`).join('');
+        uFrom.innerHTML = html; uTo.innerHTML = html; uTo.selectedIndex = 1;
+        convert();
     };
 
-    // --- RECHERCHE DYNAMIQUE ---
-    const filterUnits = (query) => {
-        const q = query.toLowerCase();
-        [from, to].forEach(select => {
-            Array.from(select.options).forEach(opt => {
-                const match = opt.value.toLowerCase().includes(q);
-                // Utilisation de hidden et display pour compatibilité max
-                opt.hidden = !match;
-                opt.style.display = match ? 'block' : 'none';
-            });
-            // Resélectionne le premier élément visible si la sélection actuelle est masquée
-            if(select.selectedOptions.length > 0 && select.selectedOptions[0].hidden) {
-                const firstVisible = Array.from(select.options).find(o => !o.hidden);
-                if(firstVisible) select.value = firstVisible.value;
-            }
-        });
-        calculate();
-    };
-
-    const calculate = () => {
-        let val = parseFloat(input.value.replace(',', '.'));
-        if(isNaN(val)) { output.value = ''; return; }
-
+    const convert = () => {
+        const val = parseFloat(uIn.value);
+        if(isNaN(val)) { uOut.value = ''; return; }
         const type = cat.value;
-        const uFrom = from.value;
-        const uTo = to.value;
+        const f = uFrom.value; const t = uTo.value;
         let res;
 
         if(type === 'temperature') {
-            res = convertTemp(val, uFrom, uTo);
+            let k; 
+            if(f==='Celsius') k=val+273.15; else if(f==='Fahrenheit') k=(val-32)*5/9+273.15; else k=val;
+            if(t==='Celsius') res=k-273.15; else if(t==='Fahrenheit') res=(k-273.15)*9/5+32; else res=k;
         } else {
-            const rates = unitData[type];
-            const base = val * rates[uFrom]; 
-            res = base / rates[uTo];
+            res = (val * UNITS[type][f]) / UNITS[type][t];
         }
-        output.value = formatNumber(res);
+        uOut.value = parseFloat(res.toPrecision(10));
     };
 
-    const convertTemp = (v, f, t) => {
-        let k;
-        if(f === 'Celsius') k = v + 273.15;
-        else if(f === 'Fahrenheit') k = (v - 32) * 5/9 + 273.15;
-        else k = v;
-        if(t === 'Celsius') return k - 273.15;
-        if(t === 'Fahrenheit') return (k - 273.15) * 9/5 + 32;
-        return k;
-    };
-
-    cat.addEventListener('change', updateOptions);
-    input.addEventListener('input', calculate);
-    from.addEventListener('change', calculate);
-    to.addEventListener('change', calculate);
-    
-    search.addEventListener('input', (e) => filterUnits(e.target.value));
-
+    cat.addEventListener('change', populate);
+    [uIn, uFrom, uTo].forEach(e => e.addEventListener('input', convert));
     document.getElementById('btn-swap-unit').addEventListener('click', () => {
-        const temp = from.value; from.value = to.value; to.value = temp;
-        calculate(); vibrate('click');
+        const tmp = uFrom.value; uFrom.value = uTo.value; uTo.value = tmp; convert(); vibrate();
     });
-
-    updateOptions();
+    populate();
 }
 
-/* --- DEVISES --- */
-async function initCurrency() {
-    const input = document.getElementById('currency-input');
-    const output = document.getElementById('currency-output');
-    const codes = ["EUR","USD","GBP","JPY","CHF","CAD","AUD","CNY"]; // Liste abrégée pour l'exemple
-    
-    const opts = codes.map(c => `<option value="${c}">${c}</option>`).join('');
-    document.getElementById('currency-from').innerHTML = opts;
-    document.getElementById('currency-to').innerHTML = opts;
-    document.getElementById('currency-to').value = 'USD';
+function initCurrency() {
+    const codes = ["EUR","USD","GBP","JPY","CHF","CAD","AUD","CNY"];
+    const from = document.getElementById('curr-from');
+    const to = document.getElementById('curr-to');
+    const input = document.getElementById('curr-input');
+    const output = document.getElementById('curr-output');
+    const status = document.getElementById('currency-status');
+    const statusMsg = document.getElementById('currency-msg');
+    const btnRefresh = document.getElementById('btn-refresh-curr');
+
+    from.innerHTML = to.innerHTML = codes.map(c => `<option value="${c}">${c}</option>`).join('');
+    to.value = 'USD';
 
     let rates = null;
-    const fetchRates = async () => {
-        try {
-            const res = await fetch('https://open.er-api.com/v6/latest/EUR');
-            const data = await res.json();
-            rates = data.rates;
-            document.getElementById('api-status-dot').style.background = '#30D158';
-            document.getElementById('api-details').innerText = 'À jour';
+
+    const fetchRates = () => {
+        statusMsg.innerText = 'Connexion...';
+        status.className = 'status-badge';
+        
+        fetch('https://open.er-api.com/v6/latest/EUR')
+        .then(r => r.json())
+        .then(d => { 
+            rates = d.rates; 
+            status.className = 'status-badge online';
+            statusMsg.innerText = 'En ligne';
             convert();
-        } catch(e) {
-            document.getElementById('api-status-dot').style.background = '#FF3B30';
-            document.getElementById('api-details').innerText = 'Offline';
-        }
+        })
+        .catch(() => { 
+            status.className = 'status-badge offline';
+            statusMsg.innerText = 'Hors ligne';
+        });
     };
 
     const convert = () => {
         if(!rates) return;
         const val = parseFloat(input.value);
-        if(isNaN(val)) return;
-        const res = (val / rates[document.getElementById('currency-from').value]) * rates[document.getElementById('currency-to').value];
-        output.value = res.toFixed(2);
+        if(!isNaN(val)) output.value = ((val / rates[from.value]) * rates[to.value]).toFixed(2);
     };
 
-    [input, document.getElementById('currency-from'), document.getElementById('currency-to')].forEach(e => e.addEventListener('input', convert));
+    [input, from, to].forEach(e => e.addEventListener('input', convert));
+    document.getElementById('btn-swap-curr').addEventListener('click', () => {
+        const tmp = from.value; from.value = to.value; to.value = tmp; convert(); vibrate();
+    });
+    btnRefresh.addEventListener('click', () => {
+        vibrate(); fetchRates();
+    });
+
     fetchRates();
 }
 
-/* --- CALCULATRICE : PEMDAS & DÉCIMALES --- */
-function initCalculator() {
-    const currentEl = document.getElementById('calc-current');
-    const exprEl = document.getElementById('calc-expr');
-    let expression = ''; // Chaîne brute pour l'eval (ex: "2+2*5")
-    let displayVal = '0'; // Affichage utilisateur
-    let resetNext = false;
-
-    // Toggle Mode
-    document.getElementById('toggle-sci').addEventListener('click', function() {
-        document.getElementById('calculator').classList.toggle('scientific');
-        this.classList.toggle('active');
-        vibrate('click');
-    });
-
-    // Animation Effect
-    const triggerAnim = () => {
-        currentEl.classList.remove('pop-anim');
-        void currentEl.offsetWidth; // Trigger reflow
-        currentEl.classList.add('pop-anim');
+function initSettings() {
+    const bindToggle = (id, prop, cb) => {
+        const el = document.getElementById(id);
+        el.checked = state[prop];
+        el.addEventListener('change', () => {
+            state[prop] = el.checked;
+            localStorage.setItem(id.replace('toggle-','ux-'), state[prop]);
+            if(cb) cb();
+            vibrate();
+        });
     };
+    
+    bindToggle('toggle-home-notes', 'showNotes', window.updateNoteVisibility);
+    bindToggle('toggle-haptic', 'haptic');
+    bindToggle('toggle-wakelock', 'wakeLock', initSystem);
 
-    const updateDisplay = () => {
-        currentEl.innerText = displayVal;
-        exprEl.innerText = expression.replace(/\*/g, '×').replace(/\//g, '÷').replace('Math.', '');
-        triggerAnim();
-    };
-
-    const addToExpr = (val) => {
-        if(resetNext) {
-            expression = '';
-            displayVal = '';
-            resetNext = false;
-        }
-        // Évite double opérateurs
-        const lastChar = expression.slice(-1);
-        if(['+','-','*','/'].includes(val) && ['+','-','*','/'].includes(lastChar)) {
-            expression = expression.slice(0, -1) + val;
-        } else {
-            expression += val;
-            if(['+','-','*','/'].includes(val)) displayVal = '';
-            else displayVal = (displayVal === '0' ? val : displayVal + val);
-        }
-        updateDisplay();
-    };
-
-    const safeCalculate = () => {
-        try {
-            // Utilisation de Function() pour un eval scopé (respecte PEMDAS)
-            // On remplace les fonctions mathématiques pour JS
-            let safeExpr = expression
-                .replace(/×/g, '*')
-                .replace(/÷/g, '/');
-                
-            // Execution
-            let result = new Function('return ' + safeExpr)();
-            
-            // Correction décimale (ex: 0.1+0.2 -> 0.3)
-            // .toPrecision(12) nettoie les queues de flottants, parseFloat supprime les zéros inutiles
-            result = parseFloat(parseFloat(result).toPrecision(12));
-
-            displayVal = result.toString();
-            expression = result.toString(); // On garde le résultat pour enchainer
-            resetNext = true;
-            updateDisplay();
-            vibrate('success');
-        } catch (e) {
-            displayVal = 'Erreur';
-            expression = '';
-            updateDisplay();
-            vibrate('error');
-        }
-    };
-
-    const mathFunc = (fn) => {
-        if(resetNext) { expression = displayVal; resetNext = false; }
-        
-        let val = parseFloat(displayVal || expression);
-        if(isNaN(val)) return;
-
-        let snippet = '';
-        if(fn === 'sin') snippet = `Math.sin(${val} * Math.PI / 180)`;
-        else if(fn === 'cos') snippet = `Math.cos(${val} * Math.PI / 180)`;
-        else if(fn === 'tan') snippet = `Math.tan(${val} * Math.PI / 180)`;
-        else if(fn === 'sqrt') snippet = `Math.sqrt(${val})`;
-        else if(fn === 'log') snippet = `Math.log10(${val})`;
-        else if(fn === 'ln') snippet = `Math.log(${val})`;
-        else if(fn === 'pow') snippet = `Math.pow(${val}, 2)`;
-        else if(fn === 'pi') { 
-            val = Math.PI; 
-            displayVal = val.toFixed(4); 
-            expression += val; 
-            updateDisplay(); 
-            return;
-        }
-
-        // Remplace le dernier nombre par la fonction
-        // Note: C'est une implémentation simplifiée pour le display
-        expression = snippet;
-        safeCalculate();
-    };
-
-    document.querySelector('.calculator-wrapper').addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if(!btn) return;
-        
-        const key = btn.dataset.key;
-        const fn = btn.dataset.fn;
-        
-        vibrate('click');
-
-        if(key) {
-            if(key === 'AC') { expression = ''; displayVal = '0'; updateDisplay(); }
-            else if(key === 'DEL') { 
-                expression = expression.slice(0, -1);
-                displayVal = displayVal.slice(0, -1) || '0';
-                updateDisplay();
-            }
-            else if(key === '=') safeCalculate();
-            else addToExpr(key);
-        } else if(fn) {
-            if(fn === '(' || fn === ')') addToExpr(fn);
-            else mathFunc(fn);
-        }
-    });
-}
-
-function initNotes() {
-    const pad = document.getElementById('note-pad');
-    pad.value = localStorage.getItem('u-note') || '';
-    pad.addEventListener('input', () => {
-        localStorage.setItem('u-note', pad.value);
-    });
-    document.getElementById('copy-note').addEventListener('click', () => {
-        navigator.clipboard.writeText(pad.value);
-        vibrate('success');
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        if(confirm("Réinitialiser l'application ?")) { localStorage.clear(); location.reload(); }
     });
 }
