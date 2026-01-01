@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#F5F5F7">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Unitix">
     <title>Unitix</title>
     
     <link rel="manifest" href="manifest.json">
@@ -64,7 +65,9 @@
                             <span class="label-mini">DE</span>
                             <select id="unit-from"></select>
                         </div>
-                        <button id="btn-swap-unit" class="swap-btn"><i class="ph ph-arrows-left-right"></i></button>
+                        <button id="btn-swap-unit" class="swap-btn" aria-label="Échanger">
+                            <i class="ph ph-arrows-left-right"></i>
+                        </button>
                         <div class="select-box">
                             <span class="label-mini">VERS</span>
                             <select id="unit-to"></select>
@@ -89,10 +92,11 @@
             </section>
 
             <section id="currency" class="page">
-               <div class="header-card"><h1>Devises</h1><p>En construction...</p></div>
+               <div class="header-card"><h1>Devises</h1><p>Module en construction...</p></div>
             </section>
+            
             <section id="datecalc" class="page">
-               <div class="header-card"><h1>Dates</h1><p>En construction...</p></div>
+               <div class="header-card"><h1>Dates</h1><p>Module en construction...</p></div>
             </section>
 
             <section id="settings" class="page">
@@ -105,14 +109,20 @@
                         <select id="theme-select">
                             <option value="light">Clair</option>
                             <option value="dark">Sombre</option>
-                            <option value="auto">Système</option>
+                            <option value="auto">Système (Auto)</option>
                         </select>
                     </div>
 
-                    <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                    <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
                         <span>Couleur d'accentuation</span>
                         <div class="color-picker">
-                            <div class="color-opt" style="background: #007AFF;" data-color="#007AFF"></div> <div class="color-opt" style="background: #AF52DE;" data-color="#AF52DE"></div> <div class="color-opt" style="background: #FF3B30;" data-color="#FF3B30"></div> <div class="color-opt" style="background: #34C759;" data-color="#34C759"></div> <div class="color-opt" style="background: #FF9500;" data-color="#FF9500"></div> </div>
+                            <div class="color-opt" style="background: #007AFF;" data-color="#007AFF"></div>
+                            <div class="color-opt" style="background: #AF52DE;" data-color="#AF52DE"></div>
+                            <div class="color-opt" style="background: #FF3B30;" data-color="#FF3B30"></div>
+                            <div class="color-opt" style="background: #34C759;" data-color="#34C759"></div>
+                            <div class="color-opt" style="background: #FF9500;" data-color="#FF9500"></div>
+                            <div class="color-opt" style="background: #5856D6;" data-color="#5856D6"></div>
+                        </div>
                     </div>
 
                     <div class="setting-row">
@@ -122,13 +132,13 @@
                             <span class="slider"></span>
                         </label>
                     </div>
+                    
                     <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-                    <button id="btn-reset" class="btn-danger">Réinitialiser Unitix</button>
+                    
+                    <button id="btn-reset" class="btn-danger">Réinitialiser l'application</button>
                 </div>
             </section>
         </main>
-        
-        <div id="toast" class="toast">Copié !</div>
     </div>
     <script src="script.js"></script>
 </body>
