@@ -1,451 +1,408 @@
-/* --- ETAT GLOBAL --- */
+// --- ÉTAT GLOBAL ---
 const state = {
-    theme: localStorage.getItem('ux-theme') || 'auto',
-    color: localStorage.getItem('ux-color') || '#007AFF',
-    haptic: localStorage.getItem('ux-haptic') !== 'false',
-    notepad: localStorage.getItem('ux-notepad') === 'true',
-    wakeLock: localStorage.getItem('ux-wake') === 'true',
-    calcMode: 'standard', // 'standard' ou 'scientific'
-    rates: {} // Cache devises
+    theme: localStorage.getItem('u-theme') || 'auto',
+    accent: localStorage.getItem('u-accent') || '#007AFF',
+    history: JSON.parse(localStorage.getItem('u-history')) || { unit: [], currency: [] }
 };
 
-let wakeLockSentinel = null;
-
 document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    initSettings();
+    applyTheme(state.theme);
+    applyAccent(state.accent);
+    
+    // Initialisation des modules
     initNavigation();
-    initNotepad();
-    initConverter();
+    initSettings();
+    initUnits();
     initCurrency();
     initCalculator();
-    initDateCalc();
-    applyWakeLock();
-
-    // Listener Système Thème
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (state.theme === 'auto') initTheme();
-    });
+    initNotes();
 });
 
 /* --- UTILITAIRES --- */
-const vibrate = () => {
-    // Vibre seulement sur mobile (détection sommaire) et si activé
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (state.haptic && isMobile && navigator.vibrate) {
-        navigator.vibrate(10);
-    }
+const formatNumber = (num) => {
+    if (num === '') return '';
+    // Gestion des décimales pour éviter 1,000.0000
+    const n = parseFloat(num);
+    if (isNaN(n)) return '';
+    return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 6 }).format(n);
 };
 
-const showToast = (msg) => {
-    const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.classList.add('visible');
-    setTimeout(() => t.classList.remove('visible'), 2000);
-};
-
-const copyToClipboard = (text) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
-        vibrate();
-        showToast("Copié !");
-    });
-};
-
-/* --- THEME & WAKE LOCK --- */
-function initTheme() {
-    let effectiveTheme = state.theme;
-    if (state.theme === 'auto') {
-        effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    document.body.setAttribute('data-theme', effectiveTheme);
-    document.documentElement.style.setProperty('--primary', state.color);
+const updateHistory = (type, text) => {
+    // Ajouter au début et garder max 5
+    state.history[type].unshift(text);
+    if (state.history[type].length > 5) state.history[type].pop();
     
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) metaTheme.content = effectiveTheme === 'dark' ? '#000000' : '#F5F5F7';
-}
+    localStorage.setItem('u-history', JSON.stringify(state.history));
+    renderHistory(type);
+};
 
-async function applyWakeLock() {
-    if (state.wakeLock && 'wakeLock' in navigator) {
-        try {
-            wakeLockSentinel = await navigator.wakeLock.request('screen');
-        } catch (err) { console.log('Wake Lock error:', err); }
-    } else if (!state.wakeLock && wakeLockSentinel) {
-        wakeLockSentinel.release();
-        wakeLockSentinel = null;
+const renderHistory = (type) => {
+    const list = document.getElementById(`${type}-history`);
+    list.innerHTML = state.history[type].map(item => 
+        `<li><span>${item.split(' = ')[0]}</span> ${item.split(' = ')[1]}</li>`
+    ).join('');
+};
+
+/* --- THEME & REGLAGES --- */
+function applyTheme(mode) {
+    const root = document.documentElement;
+    if (mode === 'auto') {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    } else {
+        root.setAttribute('data-theme', mode);
     }
 }
 
-/* --- REGLAGES --- */
-function initSettings() {
-    // Thème
-    const ts = document.getElementById('theme-select');
-    ts.value = state.theme;
-    ts.addEventListener('change', (e) => {
-        state.theme = e.target.value;
-        localStorage.setItem('ux-theme', state.theme);
-        initTheme();
+function applyAccent(color) {
+    document.documentElement.style.setProperty('--primary', color);
+    // Mise à jour visuelle des boutons de couleur
+    document.querySelectorAll('.color-dot').forEach(d => {
+        d.classList.toggle('active', d.dataset.color === color);
     });
+}
 
-    // Couleurs
-    document.querySelectorAll('.color-opt').forEach(opt => {
-        if(opt.dataset.color === state.color) opt.classList.add('active');
-        opt.addEventListener('click', () => {
-            vibrate();
-            document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            state.color = opt.dataset.color;
-            localStorage.setItem('ux-color', state.color);
-            initTheme();
+function initSettings() {
+    // Boutons de thème
+    document.querySelectorAll('.seg-btn').forEach(btn => {
+        if(btn.dataset.mode === state.theme) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.theme = btn.dataset.mode;
+            localStorage.setItem('u-theme', state.theme);
+            applyTheme(state.theme);
         });
     });
 
-    // Switches
-    setupSwitch('toggle-haptic', 'haptic', 'ux-haptic');
-    setupSwitch('toggle-notepad', 'notepad', 'ux-notepad', initNotepad);
-    setupSwitch('toggle-wake', 'wakeLock', 'ux-wake', applyWakeLock);
+    // Boutons de couleur
+    document.querySelectorAll('.color-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            state.accent = dot.dataset.color;
+            localStorage.setItem('u-accent', state.accent);
+            applyAccent(state.accent);
+        });
+    });
 
-    // Reset
+    // Reset total
     document.getElementById('btn-reset').addEventListener('click', () => {
-        if(confirm("Réinitialiser toutes les données ?")) {
+        if(confirm("Tout effacer (notes, historique, préférences) ?")) {
             localStorage.clear();
             location.reload();
         }
     });
 }
 
-function setupSwitch(id, stateKey, storageKey, callback) {
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.checked = state[stateKey];
-    el.addEventListener('change', (e) => {
-        state[stateKey] = e.target.checked;
-        localStorage.setItem(storageKey, state[stateKey]);
-        if(callback) callback();
-    });
-}
-
-/* --- NAVIGATION & NOTEPAD --- */
+/* --- NAVIGATION --- */
 function initNavigation() {
-    const btns = document.querySelectorAll('.nav-btn');
-    const pages = document.querySelectorAll('.page');
-
-    btns.forEach(btn => {
+    const navBtns = document.querySelectorAll('.nav-btn[data-target]');
+    navBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            vibrate();
-            btns.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-btn, .panel').forEach(el => el.classList.remove('active'));
             btn.classList.add('active');
-            const target = btn.dataset.target;
-            
-            pages.forEach(p => {
-                if(p.id === target) {
-                    p.style.display = 'block';
-                    setTimeout(() => p.classList.add('active'), 10);
-                } else {
-                    p.classList.remove('active');
-                    setTimeout(() => p.style.display = 'none', 300);
-                }
-            });
+            document.getElementById(btn.dataset.target).classList.add('active');
         });
-    });
-
-    // Auto copy inputs
-    document.querySelectorAll('.copyable').forEach(el => {
-        el.addEventListener('click', () => copyToClipboard(el.value));
     });
 }
 
-function initNotepad() {
-    const container = document.getElementById('notepad-container');
-    const area = document.getElementById('notepad-area');
-    
-    if (state.notepad) {
-        container.style.display = 'block';
-        area.value = localStorage.getItem('ux-notepad-content') || "";
-        area.addEventListener('input', () => {
-            localStorage.setItem('ux-notepad-content', area.value);
-        });
-    } else {
-        container.style.display = 'none';
-    }
-}
-
-/* --- CONVERTISSEUR (Unifié) --- */
-const UNITS = {
-    "Longueur": { base: "m", units: { m:1, km:1000, cm:0.01, mm:0.001, in:0.0254, ft:0.3048, mi:1609.34 } },
-    "Masse": { base: "g", units: { g:1, kg:1000, mg:0.001, lb:453.592, oz:28.3495 } },
-    "Température": { base: "c", special: true, units: { c:"Celsius", f:"Fahrenheit", k:"Kelvin" } },
-    "Volume": { base: "l", units: { l:1, ml:0.001, gal:3.785, fl_oz:0.02957 } },
-    "Vitesse": { base: "mps", units: { mps:1, kmh:0.2777, mph:0.4470, kn:0.5144 } }
+/* --- CONVERTISSEUR UNITÉS --- */
+const unitData = {
+    length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.34, ft: 0.3048, in: 0.0254 },
+    mass: { kg: 1, g: 0.001, t: 1000, lb: 0.453592, oz: 0.0283495 },
+    volume: { l: 1, ml: 0.001, m3: 1000, gal: 3.78541 },
+    speed: { "km/h": 1, mph: 1.60934, "m/s": 3.6, kn: 1.852 },
+    data: { MB: 1, GB: 1024, TB: 1048576, KB: 0.0009765625 },
+    temperature: { type: 'special' }
 };
 
-function initConverter() {
-    const catBtns = document.querySelectorAll('.cat-btn');
-    const fromSel = document.getElementById('unit-from');
-    const toSel = document.getElementById('unit-to');
+function initUnits() {
+    const cat = document.getElementById('unit-category');
+    const from = document.getElementById('unit-from');
+    const to = document.getElementById('unit-to');
     const input = document.getElementById('unit-input');
     const output = document.getElementById('unit-output');
-    
-    let currentCat = "Longueur";
+    const swapBtn = document.getElementById('btn-swap-unit');
 
-    function populateSelects() {
-        const data = UNITS[currentCat].units;
-        const opts = Object.keys(data).map(k => `<option value="${k}">${k}</option>`).join('');
-        fromSel.innerHTML = opts;
-        toSel.innerHTML = opts;
-        // Defaults
-        if(currentCat === "Longueur") { fromSel.value="m"; toSel.value="km"; }
-        if(currentCat === "Température") { fromSel.value="c"; toSel.value="f"; }
+    renderHistory('unit');
+
+    function populate() {
+        const type = cat.value;
+        const units = type === 'temperature' 
+            ? ['Celsius', 'Fahrenheit', 'Kelvin'] 
+            : Object.keys(unitData[type]);
+        
+        const html = units.map(u => `<option value="${u}">${u}</option>`).join('');
+        from.innerHTML = html;
+        to.innerHTML = html;
+        to.selectedIndex = 1;
         calculate();
     }
 
     function calculate() {
-        const val = parseFloat(input.value);
-        if(isNaN(val)) { output.value = ""; return; }
-        
-        const u1 = fromSel.value;
-        const u2 = toSel.value;
-        let res = 0;
+        let val = input.value.replace(',', '.'); // Accepte virgules
+        if(val === '' || isNaN(val)) { output.value = ''; return; }
+        val = parseFloat(val);
 
-        if(UNITS[currentCat].special) { // Temp
-            let c = val;
-            if(u1 === 'f') c = (val - 32) * 5/9;
-            if(u1 === 'k') c = val - 273.15;
-            if(u2 === 'c') res = c;
-            if(u2 === 'f') res = (c * 9/5) + 32;
-            if(u2 === 'k') res = c + 273.15;
+        let result;
+        const type = cat.value;
+        const uFrom = from.value;
+        const uTo = to.value;
+
+        if(type === 'temperature') {
+            result = convertTemp(val, uFrom, uTo);
         } else {
-            const base = val * UNITS[currentCat].units[u1];
-            res = base / UNITS[currentCat].units[u2];
+            const rates = unitData[type];
+            result = (val * rates[uFrom]) / rates[uTo];
         }
+
+        const formattedResult = parseFloat(result.toPrecision(7));
+        output.value = formatNumber(formattedResult);
         
-        output.value = parseFloat(res.toFixed(6));
+        // Debounce simple pour historique
+        clearTimeout(window.unitTimer);
+        window.unitTimer = setTimeout(() => {
+            updateHistory('unit', `${val} ${uFrom} = ${formattedResult} ${uTo}`);
+        }, 2000);
     }
 
-    catBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            vibrate();
-            catBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentCat = btn.dataset.cat;
-            populateSelects();
-        });
-    });
+    function convertTemp(v, f, t) {
+        let k;
+        if(f === 'Celsius') k = v + 273.15;
+        else if(f === 'Fahrenheit') k = (v - 32) * 5/9 + 273.15;
+        else k = v;
+        if(t === 'Celsius') return k - 273.15;
+        if(t === 'Fahrenheit') return (k - 273.15) * 9/5 + 32;
+        return k;
+    }
 
-    input.addEventListener('input', calculate);
-    fromSel.addEventListener('change', calculate);
-    toSel.addEventListener('change', calculate);
-    document.getElementById('btn-swap-unit').addEventListener('click', () => {
-        vibrate();
-        const tmp = fromSel.value; fromSel.value = toSel.value; toSel.value = tmp;
+    // Swap Logic
+    swapBtn.addEventListener('click', () => {
+        const temp = from.value;
+        from.value = to.value;
+        to.value = temp;
         calculate();
     });
 
-    populateSelects();
+    cat.addEventListener('change', populate);
+    input.addEventListener('input', calculate);
+    from.addEventListener('change', calculate);
+    to.addEventListener('change', calculate);
+
+    populate();
 }
 
-/* --- DEVISES (API) --- */
+/* --- DEVISES (API SÉCURISÉE & CACHE) --- */
 async function initCurrency() {
-    const fromSel = document.getElementById('curr-from');
-    const toSel = document.getElementById('curr-to');
-    const input = document.getElementById('curr-input');
-    const output = document.getElementById('curr-output');
-    const info = document.getElementById('curr-rate-info');
-    
-    const currs = ["EUR", "USD", "GBP", "JPY", "CHF", "CAD", "AUD", "CNY"];
-    const opts = currs.map(c => `<option value="${c}">${c}</option>`).join('');
-    fromSel.innerHTML = opts; toSel.innerHTML = opts;
-    toSel.value = "USD";
+    const from = document.getElementById('currency-from');
+    const to = document.getElementById('currency-to');
+    const input = document.getElementById('currency-input');
+    const output = document.getElementById('currency-output');
+    const statusDot = document.getElementById('api-status-dot');
+    const statusTxt = document.getElementById('api-details');
+    const swapBtn = document.getElementById('btn-swap-currency');
 
+    renderHistory('currency');
+
+    // Liste étendue
+    const currencies = [
+        "EUR", "USD", "GBP", "JPY", "CHF", "CAD", "AUD", "CNY", "INR", "BRL", 
+        "RUB", "KRW", "SGD", "MXN", "HKD", "NZD", "SEK", "ZAR", "TRY"
+    ];
+    
+    // Remplissage avec tri alphabétique
+    const opts = currencies.sort().map(c => `<option value="${c}">${c}</option>`).join('');
+    from.innerHTML = opts; to.innerHTML = opts;
+    from.value = 'EUR'; to.value = 'USD';
+
+    let rates = {};
+
+    // Fonction de récupération avec Cache
     async function fetchRates() {
+        const CACHE_KEY = 'u-currency-data';
+        const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24h
+
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        const now = Date.now();
+
+        // Utiliser le cache si valide
+        if (cached && (now - cached.timestamp < CACHE_DURATION)) {
+            rates = cached.rates;
+            updateStatus(true, "Cache", new Date(cached.timestamp));
+            convert();
+            return;
+        }
+
         try {
+            statusTxt.innerText = "Mise à jour...";
             const res = await fetch('https://open.er-api.com/v6/latest/EUR');
             const data = await res.json();
-            state.rates = data.rates;
-            calcCurr();
-        } catch(e) {
-            info.innerText = "Erreur de connexion";
+            
+            if(data.result === "success") {
+                rates = data.rates;
+                // Sauvegarde
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    timestamp: now,
+                    rates: rates,
+                    date: data.time_last_update_utc
+                }));
+                updateStatus(true, "API", new Date());
+                convert();
+            } else { throw new Error("API Error"); }
+        } catch (e) {
+            if(cached) {
+                rates = cached.rates;
+                updateStatus(false, "Hors-ligne (Cache)", new Date(cached.timestamp));
+            } else {
+                updateStatus(false, "Erreur connexion", null);
+            }
         }
     }
 
-    function calcCurr() {
-        if(!state.rates || !state.rates[fromSel.value]) return;
-        const amount = parseFloat(input.value);
-        if(isNaN(amount)) { output.value = ""; return; }
-        
-        const baseRate = state.rates[fromSel.value];
-        const targetRate = state.rates[toSel.value];
-        const res = (amount / baseRate) * targetRate;
-        
-        output.value = res.toFixed(2);
-        info.innerText = `1 ${fromSel.value} = ${(targetRate/baseRate).toFixed(4)} ${toSel.value}`;
+    function updateStatus(success, source, date) {
+        statusDot.style.background = success ? '#34C759' : '#FF9500'; // Vert ou Orange
+        const dateStr = date ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+        statusTxt.innerText = `Source: ${source} • MàJ: ${dateStr}`;
     }
 
-    input.addEventListener('input', calcCurr);
-    fromSel.addEventListener('change', calcCurr);
-    toSel.addEventListener('change', calcCurr);
-    document.getElementById('btn-swap-curr').addEventListener('click', () => {
-        vibrate();
-        const t = fromSel.value; fromSel.value = toSel.value; toSel.value = t;
-        calcCurr();
+    function convert() {
+        if(!rates[from.value]) return;
+        let val = parseFloat(input.value.replace(',', '.'));
+        if(isNaN(val)) { output.value = ''; return; }
+
+        // Conversion via EUR (Base de l'API)
+        // Rate(From -> To) = (1 / Rate(From)) * Rate(To)
+        const rateFrom = rates[from.value];
+        const rateTo = rates[to.value];
+        const result = (val / rateFrom) * rateTo;
+
+        const formatted = result.toFixed(2);
+        output.value = formatNumber(formatted);
+
+        clearTimeout(window.currTimer);
+        window.currTimer = setTimeout(() => {
+            updateHistory('currency', `${val} ${from.value} = ${formatted} ${to.value}`);
+        }, 2000);
+    }
+
+    swapBtn.addEventListener('click', () => {
+        const t = from.value; from.value = to.value; to.value = t;
+        convert();
     });
 
+    [input, from, to].forEach(e => e.addEventListener('input', convert));
+    
     await fetchRates();
 }
 
-/* --- CALCULATRICE WINDOWS LIKE --- */
-let calcData = {
-    curr: "0",
-    prev: null,
-    op: null,
-    hist: [],
-    newNumber: true
-};
-
+/* --- CALCULATRICE SÉCURISÉE --- */
 function initCalculator() {
-    const grid = document.getElementById('calc-grid');
-    const display = document.getElementById('calc-display');
-    const preview = document.getElementById('calc-preview');
-    const histList = document.getElementById('calc-history-list');
+    const curr = document.getElementById('calc-current');
+    const prev = document.getElementById('calc-prev');
+    const pad = document.getElementById('calc-btns');
+
+    let currentOperand = '0';
+    let previousOperand = '';
+    let operation = undefined;
 
     const buttons = [
-        { t:'x²', c:'sci', act:'sqr' }, { t:'π', c:'sci', act:'pi' }, { t:'e', c:'sci', act:'e' }, { t:'C', c:'fn', act:'C' }, { t:'⌫', c:'fn', act:'back' },
-        { t:'x³', c:'sci', act:'cube' }, { t:'1/x', c:'sci', act:'inv' }, { t:'|x|', c:'sci', act:'abs' }, { t:'(', c:'sci', act:'(' }, { t:')', c:'sci', act:')' },
-        { t:'√', c:'sci', act:'sqrt' }, { t:'sin', c:'sci', act:'sin' }, { t:'cos', c:'sci', act:'cos' }, { t:'tan', c:'sci', act:'tan' }, { t:'n!', c:'sci', act:'fact' },
-        { t:'CE', c:'fn', act:'CE' }, { t:'C', c:'fn', act:'C' }, { t:'⌫', c:'fn', act:'back' }, { t:'÷', c:'op', act:'/' },
-        { t:'7', c:'num', act:'num' }, { t:'8', c:'num', act:'num' }, { t:'9', c:'num', act:'num' }, { t:'×', c:'op', act:'*' },
-        { t:'4', c:'num', act:'num' }, { t:'5', c:'num', act:'num' }, { t:'6', c:'num', act:'num' }, { t:'-', c:'op', act:'-' },
-        { t:'1', c:'num', act:'num' }, { t:'2', c:'num', act:'num' }, { t:'3', c:'num', act:'num' }, { t:'+', c:'op', act:'+' },
-        { t:'+/-', c:'num', act:'sign' }, { t:'0', c:'num', act:'num' }, { t:'.', c:'num', act:'dot' }, { t:'=', c:'eq', act:'=' }
+        {txt: 'AC', cls: 'func-btn'}, {txt: 'DEL', cls: 'func-btn'}, {txt: '%', cls: 'func-btn'}, {txt: '÷', cls: 'op-btn', val: '/'},
+        {txt: '7'}, {txt: '8'}, {txt: '9'}, {txt: '×', cls: 'op-btn', val: '*'},
+        {txt: '4'}, {txt: '5'}, {txt: '6'}, {txt: '-', cls: 'op-btn', val: '-'},
+        {txt: '1'}, {txt: '2'}, {txt: '3'}, {txt: '+', cls: 'op-btn', val: '+'},
+        {txt: '0', cls: 'zero-btn'}, {txt: '.'}, {txt: '=', cls: 'op-btn'}
     ];
-    
-    grid.innerHTML = buttons.map(b => `<button class="calc-btn ${b.c}" data-act="${b.act}" data-val="${b.t}">${b.t}</button>`).join('');
 
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            vibrate();
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const mode = btn.dataset.mode;
-            if(mode === 'scientific') grid.classList.add('scientific-layout');
-            else grid.classList.remove('scientific-layout');
-        });
-    });
+    // Génération HTML
+    pad.innerHTML = buttons.map(b => 
+        `<button class="${b.cls || ''}" data-val="${b.val || b.txt}">${b.txt}</button>`
+    ).join('');
 
-    grid.addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if(!btn) return;
-        handleCalcInput(btn.dataset.act, btn.dataset.val);
-    });
+    pad.addEventListener('click', (e) => {
+        if(!e.target.matches('button')) return;
+        const val = e.target.dataset.val;
 
-    function handleCalcInput(action, val) {
-        vibrate();
-        switch(action) {
-            case 'num':
-                if (calcData.newNumber) { calcData.curr = val; calcData.newNumber = false; }
-                else { calcData.curr = calcData.curr === "0" ? val : calcData.curr + val; }
+        switch(val) {
+            case 'AC': 
+                currentOperand = '0'; previousOperand = ''; operation = undefined; 
                 break;
-            case 'dot':
-                if(calcData.newNumber) { calcData.curr = "0."; calcData.newNumber = false; }
-                else if(!calcData.curr.includes('.')) calcData.curr += ".";
-                break;
-            case 'op':
-                if(calcData.op && !calcData.newNumber) calculate();
-                calcData.prev = calcData.curr;
-                calcData.op = val;
-                calcData.newNumber = true;
+            case 'DEL': 
+                currentOperand = currentOperand.toString().slice(0, -1);
+                if(currentOperand === '') currentOperand = '0';
                 break;
             case '=':
-                calculate();
-                calcData.op = null;
-                calcData.newNumber = true;
+                compute();
+                operation = undefined; previousOperand = '';
                 break;
-            case 'C':
-                calcData.curr = "0"; calcData.prev = null; calcData.op = null; calcData.newNumber = true;
+            case '+': case '-': case '*': case '/':
+                if(currentOperand === '') return;
+                if(previousOperand !== '') compute();
+                operation = val;
+                previousOperand = currentOperand;
+                currentOperand = '';
                 break;
-            case 'CE':
-                calcData.curr = "0";
+            case '%':
+                currentOperand = (parseFloat(currentOperand) / 100).toString();
                 break;
-            case 'back':
-                calcData.curr = calcData.curr.length > 1 ? calcData.curr.slice(0, -1) : "0";
-                break;
-            case 'sign':
-                calcData.curr = (parseFloat(calcData.curr) * -1).toString();
-                break;
-            case 'sqr': unaryOp(x => x*x); break;
-            case 'sqrt': unaryOp(Math.sqrt); break;
-            case 'sin': unaryOp(Math.sin); break;
-            case 'cos': unaryOp(Math.cos); break;
-            case 'tan': unaryOp(Math.tan); break;
-            case 'inv': unaryOp(x => 1/x); break;
-            case 'pi': calcData.curr = Math.PI.toString(); calcData.newNumber = false; break;
+            default: // Chiffres et points
+                if(val === '.' && currentOperand.includes('.')) return;
+                if(currentOperand === '0' && val !== '.') currentOperand = val;
+                else currentOperand += val;
         }
-        updateUI();
+        updateDisplay();
+    });
+
+    function compute() {
+        let computation;
+        const prev = parseFloat(previousOperand);
+        const current = parseFloat(currentOperand);
+        if(isNaN(prev) || isNaN(current)) return;
+
+        switch(operation) {
+            case '+': computation = prev + current; break;
+            case '-': computation = prev - current; break;
+            case '*': computation = prev * current; break;
+            case '/': computation = prev / current; break;
+            default: return;
+        }
+        currentOperand = computation.toString();
+        operation = undefined;
+        previousOperand = '';
     }
 
-    function calculate() {
-        if(!calcData.op || calcData.prev === null) return;
-        const a = parseFloat(calcData.prev);
-        const b = parseFloat(calcData.curr);
-        let res = 0;
-        const op = calcData.op;
-        if(op === '+') res = a + b;
-        else if(op === '-') res = a - b;
-        else if(op === '×' || op === '*') res = a * b;
-        else if(op === '÷' || op === '/') res = a / b;
-
-        addToHistory(`${a} ${op} ${b} = ${res}`);
-        calcData.curr = res.toString();
-        calcData.prev = null;
+    function updateDisplay() {
+        curr.innerText = formatNumber(currentOperand) || currentOperand;
+        prev.innerText = previousOperand ? `${formatNumber(previousOperand)} ${getSymbol(operation)}` : '';
     }
 
-    function unaryOp(func) {
-        calcData.curr = func(parseFloat(calcData.curr)).toString();
-        calcData.newNumber = true;
-    }
-
-    function updateUI() {
-        display.value = calcData.curr;
-        preview.innerText = (calcData.op && calcData.prev) ? `${calcData.prev} ${calcData.op}` : "";
-    }
-
-    function addToHistory(str) {
-        const div = document.createElement('div');
-        div.className = 'hist-item';
-        div.innerText = str;
-        histList.insertBefore(div, histList.firstChild);
+    function getSymbol(op) {
+        if(op === '*') return '×';
+        if(op === '/') return '÷';
+        return op;
     }
 }
 
-/* --- CALCUL DATE --- */
-function initDateCalc() {
-    const start = document.getElementById('date-start');
-    const end = document.getElementById('date-end');
-    const btn = document.getElementById('btn-calc-date');
+/* --- BLOC-NOTES --- */
+function initNotes() {
+    const pad = document.getElementById('note-pad');
+    const status = document.getElementById('save-status');
     
-    const today = new Date().toISOString().split('T')[0];
-    start.value = today;
-    end.value = today;
+    // Charger
+    pad.value = localStorage.getItem('u-note') || '';
 
-    btn.addEventListener('click', () => {
-        vibrate();
-        if(!start.value || !end.value) return;
+    // Sauvegarder
+    pad.addEventListener('input', () => {
+        localStorage.setItem('u-note', pad.value);
+        status.innerText = "Enregistrement...";
+        clearTimeout(window.noteTimer);
+        window.noteTimer = setTimeout(() => status.innerText = "Synchronisé", 800);
+    });
 
-        const d1 = new Date(start.value);
-        const d2 = new Date(end.value);
-        const diffTime = Math.abs(d2 - d1);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        
-        let y = d2.getFullYear() - d1.getFullYear();
-        let m = d2.getMonth() - d1.getMonth();
-        let d = d2.getDate() - d1.getDate();
-
-        if (d < 0) { m--; d += new Date(d2.getFullYear(), d2.getMonth(), 0).getDate(); }
-        if (m < 0) { y--; m += 12; }
-        
-        document.getElementById('res-years').innerText = Math.abs(y);
-        document.getElementById('res-months').innerText = Math.abs(m);
-        document.getElementById('res-days').innerText = Math.abs(d);
-        document.getElementById('res-total-days').innerText = `(Total : ${diffDays} jours)`;
+    // Télécharger
+    document.getElementById('download-note').addEventListener('click', () => {
+        const blob = new Blob([pad.value], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Note_Unitix_${new Date().toLocaleDateString().replace(/\//g,'-')}.txt`;
+        a.click();
     });
 }
