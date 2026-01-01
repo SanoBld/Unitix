@@ -21,304 +21,179 @@
     <div class="app-layout">
         <nav class="glass-nav">
             <div class="nav-brand">
-                <div class="brand-icon"><i class="ph-fill ph-lightning"></i></div>
+                <div class="logo">⚡️</div>
                 <span class="brand-name">Unitix</span>
             </div>
-            
-            <div class="nav-links">
-                <button class="nav-item active" data-target="panel-convert">
-                    <i class="ph ph-ruler"></i>
-                    <span>Mesures</span>
+            <div class="nav-items">
+                <button class="nav-btn active" data-target="converter" title="Unités">
+                    <i class="ph ph-scales"></i>
+                    <span>Unités</span>
                 </button>
-                <button class="nav-item" data-target="panel-currency">
-                    <i class="ph ph-currency-dollar"></i>
+                <button class="nav-btn" data-target="currency" title="Devises">
+                    <i class="ph ph-currency-eur"></i>
                     <span>Devises</span>
                 </button>
-                <button class="nav-item" data-target="panel-calc">
+                <button class="nav-btn" data-target="calculator" title="Calcul">
                     <i class="ph ph-calculator"></i>
-                    <span>Calculatrice</span>
+                    <span>Calcul</span>
                 </button>
-                <button class="nav-item" data-target="panel-date">
-                    <i class="ph ph-calendar"></i>
+                <button class="nav-btn" data-target="datecalc" title="Dates">
+                    <i class="ph ph-calendar-plus"></i>
                     <span>Dates</span>
                 </button>
-                <div class="spacer"></div>
-                <button class="nav-item" data-target="panel-about">
+                <button class="nav-btn" data-target="about" title="À Propos">
                     <i class="ph ph-info"></i>
-                    <span>À propos</span>
+                    <span>Infos</span>
                 </button>
-                <button class="nav-item" data-target="panel-settings">
+                <button class="nav-btn" data-target="settings" title="Réglages">
                     <i class="ph ph-gear"></i>
                     <span>Réglages</span>
                 </button>
             </div>
         </nav>
 
-        <main class="main-content">
-            
-            <section id="panel-convert" class="view active fade-in">
-                <header class="view-header">
-                    <h1>Mesures</h1>
-                    <div class="select-wrapper">
-                        <select id="unit-category" class="clean-select">
-                            <optgroup label="Sciences">
-                                <option value="length">📏 Longueur</option>
-                                <option value="mass">⚖️ Masse</option>
-                                <option value="volume">💧 Volume</option>
-                                <option value="temperature">🌡️ Température</option>
-                                <option value="pressure">⚙️ Pression</option>
-                                <option value="energy">⚡ Énergie</option>
-                                <option value="angle">📐 Angle</option>
-                            </optgroup>
-                            <optgroup label="Quotidien">
-                                <option value="data">💾 Données</option>
-                                <option value="cooking">👨‍🍳 Cuisine</option>
-                                <option value="speed">🚀 Vitesse</option>
-                            </optgroup>
+        <main class="content-area">
+            <section id="converter" class="page active">
+                <div class="header-card">
+                    <h1>Convertisseur</h1>
+                    <p>Précision et rapidité pour vos mesures.</p>
+                </div>
+                <div class="converter-grid">
+                    <div class="card main-card">
+                        <div class="input-group">
+                            <label>De (Valeur)</label>
+                            <input type="number" id="unit-input" placeholder="0.00">
+                        </div>
+                        <div class="conversion-row">
+                            <div class="select-wrapper">
+                                <span class="unit-detail">Source</span>
+                                <select id="unit-from"></select>
+                            </div>
+                            <button id="btn-swap-unit" class="icon-circle"><i class="ph ph-arrows-left-right"></i></button>
+                            <div class="select-wrapper">
+                                <span class="unit-detail">Cible</span>
+                                <select id="unit-to"></select>
+                            </div>
+                        </div>
+                        <div class="input-group result-group">
+                            <label>Résultat</label>
+                            <input type="text" id="unit-output" readonly placeholder="Calcul..." class="copyable">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="currency" class="page">
+                <div class="header-card">
+                    <div class="title-row">
+                        <h1>Devises</h1>
+                        <div class="api-status">
+                            <span class="status-dot" id="api-indicator"></span>
+                            <span id="currency-msg">Vérification...</span>
+                        </div>
+                    </div>
+                    <p>Taux de change en temps réel. <small>Source: Open Exchange Rates</small></p>
+                </div>
+                <div class="card">
+                    <div class="input-group">
+                        <input type="number" id="curr-input" placeholder="0.00">
+                    </div>
+                    <div class="conversion-row">
+                        <select id="curr-from"></select>
+                        <button id="btn-swap-curr" class="icon-circle"><i class="ph ph-arrows-left-right"></i></button>
+                        <select id="curr-to"></select>
+                    </div>
+                    <div class="input-group result-group">
+                        <input type="text" id="curr-output" readonly placeholder="0.00" class="copyable">
+                    </div>
+                    <button id="btn-refresh-rates" class="btn-secondary">
+                        <i class="ph ph-arrows-clockwise"></i> Actualiser les taux
+                    </button>
+                </div>
+            </section>
+
+            <section id="calculator" class="page">
+                <div class="calc-container">
+                    <div class="calc-header">
+                        <select id="calc-mode-selector">
+                            <option value="std">Standard</option>
+                            <option value="sci">Scientifique</option>
                         </select>
-                        <i class="ph ph-caret-down select-arrow"></i>
+                        <div id="calc-expression"></div>
                     </div>
-                </header>
-
-                <div class="card p-0">
-                    <div class="input-group top">
-                        <input type="text" id="unit-input" inputmode="decimal" placeholder="0" value="1">
-                        <select id="unit-from" class="unit-picker"></select>
-                    </div>
-                    
-                    <div class="swap-zone">
-                        <div class="divider"></div>
-                        <button id="btn-swap-unit" class="circle-btn shadow" aria-label="Inverser">
-                            <i class="ph ph-arrows-down-up"></i>
-                        </button>
-                    </div>
-
-                    <div class="input-group bottom result-bg">
-                        <input type="text" id="unit-output" readonly placeholder="0" class="copy-trigger">
-                        <select id="unit-to" class="unit-picker"></select>
-                    </div>
-                </div>
-
-                <div id="home-notes-area" class="hidden mt-large">
-                    <div class="section-label">Bloc-notes rapide</div>
-                    <textarea id="quick-note" class="notion-textarea" placeholder="Notez vos résultats ici..."></textarea>
-                </div>
-            </section>
-
-            <section id="panel-currency" class="view fade-in">
-                <header class="view-header">
-                    <h1>Devises</h1>
-                    <div class="status-container">
-                        <button id="btn-refresh-curr" class="icon-btn" title="Actualiser"><i class="ph ph-arrow-clockwise"></i></button>
-                        <div class="status-badge" id="currency-status">
-                            <div class="dot"></div>
-                            <span id="currency-msg">Connexion...</span>
+                    <input type="text" id="calc-display" readonly value="0">
+                    <div id="calc-grid" class="calc-grid std">
                         </div>
-                    </div>
-                </header>
-
-                <div class="card p-0">
-                    <div class="input-group top">
-                        <input type="text" id="curr-input" inputmode="decimal" placeholder="0" value="1">
-                        <select id="curr-from" class="unit-picker"></select>
-                    </div>
-                    
-                    <div class="swap-zone">
-                        <div class="divider"></div>
-                        <button id="btn-swap-curr" class="circle-btn shadow">
-                            <i class="ph ph-arrows-down-up"></i>
-                        </button>
-                    </div>
-
-                    <div class="input-group bottom result-bg">
-                        <input type="text" id="curr-output" readonly placeholder="0.00" class="copy-trigger">
-                        <select id="curr-to" class="unit-picker"></select>
-                    </div>
-                </div>
-                <p class="legal-text">Source : Open Exchange Rates API. Taux mis à jour quotidiennement.</p>
-            </section>
-
-            <section id="panel-calc" class="view fade-in full-height-view">
-                <div class="calc-wrapper">
-                    <div class="calc-top-bar">
-                        <div class="segmented-control mode-switch">
-                            <button class="seg-item active" data-calc-mode="std">Standard</button>
-                            <button class="seg-item" data-calc-mode="sci">Scientifique</button>
-                        </div>
-                    </div>
-
-                    <div class="calc-display-zone copy-trigger">
-                        <div id="calc-history-prev" class="calc-prev-op"></div>
-                        <div id="calc-current" class="calc-curr-val">0</div>
-                    </div>
-
-                    <div class="calc-tape-panel">
-                        <div class="tape-header">Historique</div>
-                        <div id="calc-tape-list" class="tape-list"></div>
-                    </div>
-
-                    <div class="calc-grid-container" id="calc-grid">
-                        <button class="key sci-key" data-op="sin">sin</button>
-                        <button class="key sci-key" data-op="cos">cos</button>
-                        <button class="key sci-key" data-op="tan">tan</button>
-                        <button class="key sci-key" data-op="fact">n!</button>
-                        <button class="key sci-key" data-op="mod">mod</button>
-
-                        <button class="key sci-key" data-op="ln">ln</button>
-                        <button class="key sci-key" data-op="log">log</button>
-                        <button class="key sci-key" data-op="sqrt">√</button>
-                        <button class="key sci-key" data-op="pow2">x²</button>
-                        <button class="key sci-key" data-op="powY">xʸ</button>
-
-                        <button class="key func" data-key="AC">AC</button>
-                        <button class="key func" data-key="DEL">⌫</button>
-                        <button class="key func" data-op="percent">%</button>
-                        <button class="key op" data-key="/">÷</button>
-
-                        <button class="key num" data-key="7">7</button>
-                        <button class="key num" data-key="8">8</button>
-                        <button class="key num" data-key="9">9</button>
-                        <button class="key op" data-key="*">×</button>
-
-                        <button class="key num" data-key="4">4</button>
-                        <button class="key num" data-key="5">5</button>
-                        <button class="key num" data-key="6">6</button>
-                        <button class="key op" data-key="-">−</button>
-
-                        <button class="key num" data-key="1">1</button>
-                        <button class="key num" data-key="2">2</button>
-                        <button class="key num" data-key="3">3</button>
-                        <button class="key op" data-key="+">+</button>
-
-                        <button class="key num" data-key="neg">+/-</button>
-                        <button class="key num" data-key="0">0</button>
-                        <button class="key num" data-key=".">,</button>
-                        <button class="key action" data-key="=">=</button>
-                    </div>
                 </div>
             </section>
 
-            <section id="panel-date" class="view fade-in">
-                <header class="view-header"><h1>Calcul de Dates</h1></header>
-                <div class="card p-large">
-                    <div class="date-input-row">
+            <section id="datecalc" class="page">
+                <div class="header-card">
+                    <h1>Dates</h1>
+                    <p>Calculer l'écart entre deux moments.</p>
+                </div>
+                <div class="card">
+                    <div class="input-group">
                         <label>Date de début</label>
                         <input type="date" id="date-start">
                     </div>
-                    <div class="divider full"></div>
-                    <div class="date-input-row">
+                    <div class="input-group">
                         <label>Date de fin</label>
                         <input type="date" id="date-end">
                     </div>
-                    <div class="mt-large">
-                        <button id="btn-calc-date" class="btn-primary-block">Calculer la durée</button>
-                    </div>
-                    
-                    <div id="date-result" class="date-result-box hidden">
-                        <div class="result-main copy-trigger" id="date-diff-text">0 jours</div>
-                        <div class="result-sub" id="date-diff-details"></div>
-                    </div>
+                    <div id="date-result" class="date-output">Sélectionnez des dates</div>
                 </div>
             </section>
 
-            <section id="panel-about" class="view fade-in">
-                <header class="view-header"><h1>À propos</h1></header>
-                
-                <div class="card p-large about-card">
-                    <div class="about-logo">
-                        <i class="ph-fill ph-lightning"></i>
-                    </div>
-                    <h2>Unitix</h2>
-                    <p class="about-desc">
-                        L'outil utilitaire ultime pour le web moderne. Rapide, précis et respectueux de votre vie privée.
-                    </p>
-                    
-                    <div class="divider full"></div>
-
-                    <div class="about-links">
-                        <a href="https://sanobld.github.io/Unitix/" target="_blank" class="about-link-row">
-                            <i class="ph ph-github-logo"></i>
-                            <span>Voir sur GitHub</span>
-                            <i class="ph ph-arrow-square-out"></i>
-                        </a>
-                    </div>
-                    
-                    <p class="about-info-text">
-                        Unitix est un projet Open Source publié sur GitHub Pages.
-                    </p>
+            <section id="about" class="page">
+                <div class="header-card">
+                    <h1>Unitix</h1>
+                    <p>Suite utilitaire moderne.</p>
                 </div>
-
-                <div class="mt-large">
-                    <h3 class="section-title">Installer l'App (PWA)</h3>
-                    <div class="install-guide">
-                        <div class="guide-step">
-                            <span class="step-num">1</span>
-                            <p>Sur <strong>iOS</strong>, ouvrez Safari, appuyez sur "Partager" <i class="ph ph-share"></i> puis "Sur l'écran d'accueil".</p>
-                        </div>
-                        <div class="guide-step">
-                            <span class="step-num">2</span>
-                            <p>Sur <strong>Android</strong> (Chrome), appuyez sur le menu <i class="ph ph-dots-three-vertical"></i> puis "Installer l'application".</p>
-                        </div>
-                        <div class="guide-step">
-                            <span class="step-num">3</span>
-                            <p>Sur <strong>PC/Mac</strong> (Chrome/Edge), cliquez sur l'icône d'installation dans la barre d'adresse.</p>
-                        </div>
-                    </div>
+                <div class="card about-card">
+                    <p>Unitix est un projet Open Source publié sur <strong>GitHub Pages</strong>.</p>
+                    <a href="https://sanobld.github.io/Unitix/" target="_blank" class="github-link">
+                        <i class="ph ph-github-logo"></i> Voir sur GitHub
+                    </a>
+                    <hr>
+                    <h3>Application PWA</h3>
+                    <p>Cette application est disponible hors ligne. Pour l'installer :</p>
+                    <ul>
+                        <li><strong>Sur iOS :</strong> Partager > Ajouter à l'écran d'accueil</li>
+                        <li><strong>Sur Android/PC :</strong> Menu > Installer l'application</li>
+                    </ul>
                 </div>
             </section>
 
-            <section id="panel-settings" class="view fade-in">
-                <header class="view-header"><h1>Réglages</h1></header>
-                
-                <div class="settings-container">
+            <section id="settings" class="page">
+                <div class="header-card">
+                    <h1>Réglages</h1>
+                </div>
+                <div class="settings-list">
                     <div class="setting-group">
                         <h2>Apparence</h2>
                         <div class="setting-row">
-                            <div class="row-icon"><i class="ph ph-moon"></i></div>
-                            <span class="row-label">Thème</span>
-                            <div class="segmented-control">
-                                <button class="seg-item active" data-theme="auto">Auto</button>
-                                <button class="seg-item" data-theme="light">Clair</button>
-                                <button class="seg-item" data-theme="dark">Sombre</button>
-                            </div>
+                            <div class="row-label">Thème</div>
+                            <select id="theme-select">
+                                <option value="light">Clair</option>
+                                <option value="dark">Sombre</option>
+                                <option value="auto">Système</option>
+                            </select>
                         </div>
                     </div>
-
                     <div class="setting-group">
                         <h2>Système</h2>
                         <div class="setting-row">
-                            <div class="row-icon"><i class="ph ph-notepad"></i></div>
-                            <span class="row-label">Notes sur l'accueil</span>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-home-notes">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="setting-row">
-                            <div class="row-icon"><i class="ph ph-vibrate"></i></div>
-                            <span class="row-label">Haptique (Mobile)</span>
+                            <span class="row-label">Vibrations (Haptique)</span>
                             <label class="switch">
                                 <input type="checkbox" id="toggle-haptic" checked>
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <div class="setting-row">
-                            <div class="row-icon"><i class="ph ph-coffee"></i></div>
-                            <span class="row-label">Mode éveil (PWA)</span>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-wakelock">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                        <button id="btn-reset" class="btn-danger">Réinitialiser l'application</button>
                     </div>
-
-                    <div class="setting-group">
-                        <button id="btn-reset" class="btn-danger">Réinitialiser Unitix</button>
-                    </div>
-                    <div class="app-version">Unitix v2.2.0 (Build 2026)</div>
                 </div>
             </section>
-
         </main>
         
         <div id="toast" class="toast">
