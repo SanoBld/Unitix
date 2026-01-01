@@ -252,7 +252,6 @@ async function initCurrency() {
     const output = document.getElementById('curr-output');
     const info = document.getElementById('curr-rate-info');
     
-    // Liste courante
     const currs = ["EUR", "USD", "GBP", "JPY", "CHF", "CAD", "AUD", "CNY"];
     const opts = currs.map(c => `<option value="${c}">${c}</option>`).join('');
     fromSel.innerHTML = opts; toSel.innerHTML = opts;
@@ -270,19 +269,16 @@ async function initCurrency() {
     }
 
     function calcCurr() {
-        if(!state.rates.EUR) return;
+        if(!state.rates || !state.rates[fromSel.value]) return;
         const amount = parseFloat(input.value);
         if(isNaN(amount)) { output.value = ""; return; }
         
-        const base = state.rates[fromSel.value];
-        const target = state.rates[toSel.value];
-        
-        // Convertir en EUR puis vers cible (car base API est EUR)
-        const inEur = amount / base;
-        const res = inEur * target;
+        const baseRate = state.rates[fromSel.value];
+        const targetRate = state.rates[toSel.value];
+        const res = (amount / baseRate) * targetRate;
         
         output.value = res.toFixed(2);
-        info.innerText = `1 ${fromSel.value} = ${(target/base).toFixed(4)} ${toSel.value}`;
+        info.innerText = `1 ${fromSel.value} = ${(targetRate/baseRate).toFixed(4)} ${toSel.value}`;
     }
 
     input.addEventListener('input', calcCurr);
@@ -303,7 +299,7 @@ let calcData = {
     prev: null,
     op: null,
     hist: [],
-    newNumber: true // Si true, le prochain chiffre remplace curr
+    newNumber: true
 };
 
 function initCalculator() {
@@ -312,15 +308,10 @@ function initCalculator() {
     const preview = document.getElementById('calc-preview');
     const histList = document.getElementById('calc-history-list');
 
-    // Layout Buttons
     const buttons = [
-        // Ligne 1 (Sci)
         { t:'x²', c:'sci', act:'sqr' }, { t:'π', c:'sci', act:'pi' }, { t:'e', c:'sci', act:'e' }, { t:'C', c:'fn', act:'C' }, { t:'⌫', c:'fn', act:'back' },
-        // Ligne 2
         { t:'x³', c:'sci', act:'cube' }, { t:'1/x', c:'sci', act:'inv' }, { t:'|x|', c:'sci', act:'abs' }, { t:'(', c:'sci', act:'(' }, { t:')', c:'sci', act:')' },
-        // Ligne 3
         { t:'√', c:'sci', act:'sqrt' }, { t:'sin', c:'sci', act:'sin' }, { t:'cos', c:'sci', act:'cos' }, { t:'tan', c:'sci', act:'tan' }, { t:'n!', c:'sci', act:'fact' },
-        // Standard Grid starts here (integrated visually)
         { t:'CE', c:'fn', act:'CE' }, { t:'C', c:'fn', act:'C' }, { t:'⌫', c:'fn', act:'back' }, { t:'÷', c:'op', act:'/' },
         { t:'7', c:'num', act:'num' }, { t:'8', c:'num', act:'num' }, { t:'9', c:'num', act:'num' }, { t:'×', c:'op', act:'*' },
         { t:'4', c:'num', act:'num' }, { t:'5', c:'num', act:'num' }, { t:'6', c:'num', act:'num' }, { t:'-', c:'op', act:'-' },
@@ -328,13 +319,8 @@ function initCalculator() {
         { t:'+/-', c:'num', act:'sign' }, { t:'0', c:'num', act:'num' }, { t:'.', c:'num', act:'dot' }, { t:'=', c:'eq', act:'=' }
     ];
     
-    // Le grid layout CSS gère l'affichage Sci vs Std
-    // Pour Std, on n'affiche que les 20 derniers boutons (index > 14) mais on va simplifier
-    // On va générer tout, CSS cachera les .sci
-    
     grid.innerHTML = buttons.map(b => `<button class="calc-btn ${b.c}" data-act="${b.act}" data-val="${b.t}">${b.t}</button>`).join('');
 
-    // Mode Toggle
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             vibrate();
@@ -346,50 +332,27 @@ function initCalculator() {
         });
     });
 
-    // Logic
     grid.addEventListener('click', (e) => {
         const btn = e.target.closest('button');
         if(!btn) return;
         handleCalcInput(btn.dataset.act, btn.dataset.val);
     });
 
-    // Keyboard
-    document.addEventListener('keydown', (e) => {
-        if(document.getElementById('calculator').style.display === 'none') return;
-        
-        const map = {
-            'Enter': '=', 'Escape': 'C', 'Backspace': 'back',
-            '/': '/', '*': '*', '-': '-', '+': '+', '.': 'dot'
-        };
-        
-        if(!isNaN(e.key)) handleCalcInput('num', e.key);
-        else if(map[e.key]) handleCalcInput(map[e.key], null);
-        else if(e.key === 's') handleCalcInput('sin', null); // raccourci exemple
-    });
-
     function handleCalcInput(action, val) {
         vibrate();
-        
         switch(action) {
             case 'num':
-                if (calcData.newNumber) {
-                    calcData.curr = val;
-                    calcData.newNumber = false;
-                } else {
-                    if (calcData.curr === "0") calcData.curr = val;
-                    else calcData.curr += val;
-                }
+                if (calcData.newNumber) { calcData.curr = val; calcData.newNumber = false; }
+                else { calcData.curr = calcData.curr === "0" ? val : calcData.curr + val; }
                 break;
             case 'dot':
                 if(calcData.newNumber) { calcData.curr = "0."; calcData.newNumber = false; }
                 else if(!calcData.curr.includes('.')) calcData.curr += ".";
                 break;
             case 'op':
-                if(calcData.op && !calcData.newNumber) {
-                    calculate(); // Chaine d'opérations
-                }
+                if(calcData.op && !calcData.newNumber) calculate();
                 calcData.prev = calcData.curr;
-                calcData.op = val || getOpFromAct(action); // si val null (keyboard)
+                calcData.op = val;
                 calcData.newNumber = true;
                 break;
             case '=':
@@ -404,37 +367,19 @@ function initCalculator() {
                 calcData.curr = "0";
                 break;
             case 'back':
-                if(calcData.curr.length > 1) calcData.curr = calcData.curr.slice(0, -1);
-                else calcData.curr = "0";
+                calcData.curr = calcData.curr.length > 1 ? calcData.curr.slice(0, -1) : "0";
                 break;
             case 'sign':
                 calcData.curr = (parseFloat(calcData.curr) * -1).toString();
                 break;
-            // Scientific / Unary
             case 'sqr': unaryOp(x => x*x); break;
             case 'sqrt': unaryOp(Math.sqrt); break;
-            case 'sin': unaryOp(x => Math.sin(x)); break;
-            case 'cos': unaryOp(x => Math.cos(x)); break;
-            case 'tan': unaryOp(x => Math.tan(x)); break;
+            case 'sin': unaryOp(Math.sin); break;
+            case 'cos': unaryOp(Math.cos); break;
+            case 'tan': unaryOp(Math.tan); break;
             case 'inv': unaryOp(x => 1/x); break;
             case 'pi': calcData.curr = Math.PI.toString(); calcData.newNumber = false; break;
         }
-
-        // Logic Pourcentage Windows style
-        // Si on a "100 +", et qu'on tape "10", puis "%" -> ça calcule 10% de 100 (10).
-        // L'utilisateur verra "10" s'afficher. Au "=" suivant, 100+10=110.
-        // Ici on simplifie : le bouton % n'est pas dans la liste par défaut mais si on l'ajoutait :
-        if(val === '%') {
-             if(calcData.op && calcData.prev) {
-                 const base = parseFloat(calcData.prev);
-                 const pct = parseFloat(calcData.curr);
-                 const res = base * (pct/100);
-                 calcData.curr = res.toString();
-             } else {
-                 calcData.curr = (parseFloat(calcData.curr)/100).toString();
-             }
-        }
-
         updateUI();
     }
 
@@ -443,37 +388,25 @@ function initCalculator() {
         const a = parseFloat(calcData.prev);
         const b = parseFloat(calcData.curr);
         let res = 0;
-        
-        // Mapping visuel vers JS
-        const opMap = {'×':'*', '÷':'/', '+':'+', '-':'-'};
-        const jsOp = opMap[calcData.op] || calcData.op;
+        const op = calcData.op;
+        if(op === '+') res = a + b;
+        else if(op === '-') res = a - b;
+        else if(op === '×' || op === '*') res = a * b;
+        else if(op === '÷' || op === '/') res = a / b;
 
-        if(jsOp === '+') res = a + b;
-        if(jsOp === '-') res = a - b;
-        if(jsOp === '*') res = a * b;
-        if(jsOp === '/') res = a / b;
-
-        // Historique
-        addToHistory(`${a} ${calcData.op} ${b} = ${res}`);
-        
+        addToHistory(`${a} ${op} ${b} = ${res}`);
         calcData.curr = res.toString();
         calcData.prev = null;
     }
 
     function unaryOp(func) {
-        const v = parseFloat(calcData.curr);
-        const res = func(v);
-        calcData.curr = res.toString();
+        calcData.curr = func(parseFloat(calcData.curr)).toString();
         calcData.newNumber = true;
     }
 
     function updateUI() {
         display.value = calcData.curr;
-        if(calcData.op && calcData.prev) {
-            preview.innerText = `${calcData.prev} ${calcData.op}`;
-        } else {
-            preview.innerText = "";
-        }
+        preview.innerText = (calcData.op && calcData.prev) ? `${calcData.prev} ${calcData.op}` : "";
     }
 
     function addToHistory(str) {
@@ -490,22 +423,19 @@ function initDateCalc() {
     const end = document.getElementById('date-end');
     const btn = document.getElementById('btn-calc-date');
     
-    // Default today
     const today = new Date().toISOString().split('T')[0];
     start.value = today;
     end.value = today;
 
     btn.addEventListener('click', () => {
         vibrate();
-        const d1 = new Date(start.value);
-        const d2 = new Date(end.value);
-        
         if(!start.value || !end.value) return;
 
+        const d1 = new Date(start.value);
+        const d2 = new Date(end.value);
         const diffTime = Math.abs(d2 - d1);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
         
-        // Calcul détaillé Y/M/D (approximatif pour UX)
         let y = d2.getFullYear() - d1.getFullYear();
         let m = d2.getMonth() - d1.getMonth();
         let d = d2.getDate() - d1.getDate();
@@ -513,12 +443,6 @@ function initDateCalc() {
         if (d < 0) { m--; d += new Date(d2.getFullYear(), d2.getMonth(), 0).getDate(); }
         if (m < 0) { y--; m += 12; }
         
-        // Si d2 < d1, on inverse juste l'affichage en absolu
-        if(d1 > d2) {
-             // Recalcul simple inversé pour affichage propre
-             // (Logic simplified for demo)
-        }
-
         document.getElementById('res-years').innerText = Math.abs(y);
         document.getElementById('res-months').innerText = Math.abs(m);
         document.getElementById('res-days').innerText = Math.abs(d);

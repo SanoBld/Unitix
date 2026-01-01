@@ -17,189 +17,146 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-<body data-theme="auto">
-
+<body>
     <div class="app-layout">
         <nav class="glass-nav">
-            <div class="nav-brand">
-                <div class="logo">⚡️</div>
-                <span class="brand-name">Unitix</span>
-            </div>
+            <div class="nav-brand">Unitix</div>
             <div class="nav-items">
-                <button class="nav-btn active" data-target="converter">
-                    <i class="ph ph-scales"></i>
+                <button class="nav-btn active" data-target="page-calc">
+                    <i class="ph-bold ph-calculator"></i>
+                    <span>Calculatrice</span>
+                </button>
+                <button class="nav-btn" data-target="page-convert">
+                    <i class="ph-bold ph-arrows-left-right"></i>
                     <span>Unités</span>
                 </button>
-                <button class="nav-btn" data-target="currency">
-                    <i class="ph ph-currency-eur"></i>
+                <button class="nav-btn" data-target="page-currency">
+                    <i class="ph-bold ph-currency-eur"></i>
                     <span>Devises</span>
                 </button>
-                <button class="nav-btn" data-target="calculator">
-                    <i class="ph ph-calculator"></i>
-                    <span>Calcul</span>
-                </button>
-                <button class="nav-btn" data-target="datecalc">
-                    <i class="ph ph-calendar-plus"></i>
+                <button class="nav-btn" data-target="page-date">
+                    <i class="ph-bold ph-calendar"></i>
                     <span>Dates</span>
                 </button>
                 <div class="spacer"></div>
-                <button class="nav-btn" data-target="settings">
-                    <i class="ph ph-gear"></i>
+                <button class="nav-btn" data-target="page-settings">
+                    <i class="ph-bold ph-gear"></i>
                     <span>Réglages</span>
                 </button>
             </div>
         </nav>
 
         <main class="content-area">
-            <div id="notepad-container" class="notepad-wrapper" style="display:none;">
-                <textarea id="notepad-area" placeholder="Notes rapides..."></textarea>
+            <div id="notepad-container" class="notepad-wrapper">
+                <textarea id="notepad-area" placeholder="Note rapide..."></textarea>
             </div>
 
-            <section id="converter" class="page active" style="display: block;">
-                <div class="header-card">
-                    <h1>Unités</h1>
-                    <p>Conversions de mesures physiques.</p>
-                </div>
-                <div class="card">
-                    <div class="input-group">
-                        <label>Valeur</label>
-                        <input type="number" id="unit-input" placeholder="0" inputmode="decimal">
-                    </div>
-                    
-                    <div class="input-group">
-                        <div class="category-tabs" id="unit-cats">
-                            <button class="cat-btn active" data-cat="Longueur">📏 Longueur</button>
-                            <button class="cat-btn" data-cat="Masse">⚖️ Masse</button>
-                            <button class="cat-btn" data-cat="Température">🌡️ Temp.</button>
-                            <button class="cat-btn" data-cat="Volume">💧 Volume</button>
-                            <button class="cat-btn" data-cat="Vitesse">🚀 Vitesse</button>
+            <section id="page-calc" class="page active">
+                <div class="calc-container">
+                    <div class="calc-header">
+                        <div class="mode-selector">
+                            <button class="mode-btn active" data-mode="standard">Standard</button>
+                            <button class="mode-btn" data-mode="scientific">Scientifique</button>
                         </div>
                     </div>
-
-                    <div class="conversion-row">
-                        <div class="select-box">
-                            <span class="label-mini">DE</span>
-                            <select id="unit-from"></select>
-                        </div>
-                        <button id="btn-swap-unit" class="swap-btn" aria-label="Échanger">
-                            <i class="ph ph-arrows-left-right"></i>
-                        </button>
-                        <div class="select-box">
-                            <span class="label-mini">VERS</span>
-                            <select id="unit-to"></select>
-                        </div>
-                    </div>
-                    <div class="input-group result-group">
-                        <label>Résultat</label>
-                        <input type="text" id="unit-output" readonly placeholder="0.00" class="copyable">
-                    </div>
-                </div>
-            </section>
-
-            <section id="currency" class="page">
-                <div class="header-card">
-                    <h1>Devises</h1>
-                    <p>Taux de change en temps réel.</p>
-                </div>
-                <div class="card">
-                     <div class="input-group">
-                        <label>Montant</label>
-                        <input type="number" id="curr-input" placeholder="1.00" inputmode="decimal">
-                    </div>
-                    <div class="conversion-row">
-                        <div class="select-box">
-                            <span class="label-mini">DE</span>
-                            <select id="curr-from"></select>
-                        </div>
-                        <button id="btn-swap-curr" class="swap-btn"><i class="ph ph-arrows-left-right"></i></button>
-                        <div class="select-box">
-                            <span class="label-mini">VERS</span>
-                            <select id="curr-to"></select>
-                        </div>
-                    </div>
-                    <div class="input-group result-group">
-                        <label>Montant converti</label>
-                        <input type="text" id="curr-output" readonly placeholder="..." class="copyable">
-                        <div id="curr-rate-info" style="font-size: 0.8rem; color: var(--text-sub); margin-top: 5px; text-align: right;"></div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="calculator" class="page">
-                <div class="calc-top-bar">
-                    <div class="mode-switch">
-                        <button class="mode-btn active" data-mode="standard">Standard</button>
-                        <button class="mode-btn" data-mode="scientific">Scientifique</button>
-                    </div>
-                </div>
-                <div class="calc-wrapper">
                     <div class="calc-screen">
-                        <div id="calc-history-list">
-                            </div>
-                        <div class="current-op">
-                            <div id="calc-preview"></div>
-                            <input type="text" id="calc-display" readonly value="0" class="copyable">
+                        <div id="calc-preview" class="calc-preview"></div>
+                        <input type="text" id="calc-display" class="calc-main-display" value="0" readonly>
+                    </div>
+                    <div id="calc-grid" class="calc-grid"></div>
+                </div>
+                <div class="calc-history">
+                    <h3>Historique</h3>
+                    <div id="calc-history-list"></div>
+                </div>
+            </section>
+
+            <section id="page-convert" class="page">
+                <div class="card">
+                    <h2>Convertisseur d'unités</h2>
+                    <div class="cat-grid">
+                        <button class="cat-btn active" data-cat="Longueur">Longueur</button>
+                        <button class="cat-btn" data-cat="Masse">Masse</button>
+                        <button class="cat-btn" data-cat="Température">Température</button>
+                        <button class="cat-btn" data-cat="Volume">Volume</button>
+                        <button class="cat-btn" data-cat="Vitesse">Vitesse</button>
+                    </div>
+                    <div class="conv-inputs">
+                        <div class="input-group">
+                            <select id="unit-from"></select>
+                            <input type="number" id="unit-input" placeholder="0">
+                        </div>
+                        <button id="btn-swap-unit" class="btn-icon"><i class="ph-bold ph-arrows-down-up"></i></button>
+                        <div class="input-group">
+                            <select id="unit-to"></select>
+                            <input type="text" id="unit-output" class="copyable" readonly>
                         </div>
                     </div>
-                    <div id="calc-grid" class="calc-grid standard-layout">
+                </div>
+            </section>
+
+            <section id="page-currency" class="page">
+                <div class="card">
+                    <h2>Convertisseur de devises</h2>
+                    <div class="conv-inputs">
+                        <div class="input-group">
+                            <select id="curr-from"></select>
+                            <input type="number" id="curr-input" placeholder="0">
                         </div>
+                        <button id="btn-swap-curr" class="btn-icon"><i class="ph-bold ph-arrows-down-up"></i></button>
+                        <div class="input-group">
+                            <select id="curr-to"></select>
+                            <input type="text" id="curr-output" class="copyable" readonly>
+                        </div>
+                    </div>
+                    <div id="curr-rate-info" class="rate-info">Chargement des taux...</div>
                 </div>
             </section>
 
-            <section id="datecalc" class="page">
-               <div class="header-card"><h1>Dates</h1><p>Calculer la durée entre deux moments.</p></div>
-               <div class="card">
-                   <div class="input-group">
-                       <label>Date de début</label>
-                       <input type="date" id="date-start">
-                   </div>
-                   <div class="input-group">
-                       <label>Date de fin</label>
-                       <input type="date" id="date-end">
-                   </div>
-                   <button id="btn-calc-date" class="action-btn">Calculer la différence</button>
-                   
-                   <div class="result-box mt-20">
-                       <div class="date-res">
-                           <span id="res-years">0</span> ans
-                       </div>
-                       <div class="date-res">
-                           <span id="res-months">0</span> mois
-                       </div>
-                       <div class="date-res">
-                           <span id="res-days">0</span> jours
-                       </div>
-                       <p id="res-total-days" style="text-align: center; color: var(--text-sub); margin-top: 10px; font-size: 0.9rem;">(Total: 0 jours)</p>
-                   </div>
-               </div>
+            <section id="page-date" class="page">
+                <div class="card">
+                    <h2>Différence entre deux dates</h2>
+                    <div class="date-inputs">
+                        <div class="field">
+                            <label>De</label>
+                            <input type="date" id="date-start">
+                        </div>
+                        <div class="field">
+                            <label>À</label>
+                            <input type="date" id="date-end">
+                        </div>
+                        <button id="btn-calc-date" class="btn-primary">Calculer</button>
+                    </div>
+                    <div id="date-result" class="date-result">
+                        <div class="res-item"><span id="res-years">0</span> Années</div>
+                        <div class="res-item"><span id="res-months">0</span> Mois</div>
+                        <div class="res-item"><span id="res-days">0</span> Jours</div>
+                        <p id="res-total-days" style="grid-column: span 3; opacity: 0.6;"></p>
+                    </div>
+                </div>
             </section>
 
-            <section id="settings" class="page">
-                <div class="header-card">
-                    <h1>Réglages</h1>
-                </div>
-                <div class="card settings-card">
+            <section id="page-settings" class="page">
+                <div class="card">
+                    <h2>Réglages</h2>
                     <div class="setting-row">
-                        <span>Thème</span>
+                        <span>Thème de l'application</span>
                         <select id="theme-select">
+                            <option value="auto">Auto (Système)</option>
                             <option value="light">Clair</option>
                             <option value="dark">Sombre</option>
-                            <option value="auto">Système</option>
                         </select>
                     </div>
-
-                    <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+                    <div class="setting-row">
                         <span>Couleur d'accentuation</span>
                         <div class="color-picker">
-                            <div class="color-opt" style="background: #007AFF;" data-color="#007AFF"></div>
-                            <div class="color-opt" style="background: #AF52DE;" data-color="#AF52DE"></div>
-                            <div class="color-opt" style="background: #FF3B30;" data-color="#FF3B30"></div>
-                            <div class="color-opt" style="background: #34C759;" data-color="#34C759"></div>
-                            <div class="color-opt" style="background: #FF9500;" data-color="#FF9500"></div>
-                            <div class="color-opt" style="background: #5856D6;" data-color="#5856D6"></div>
+                            <div class="color-opt" data-color="#007AFF" style="background:#007AFF"></div>
+                            <div class="color-opt" data-color="#34C759" style="background:#34C759"></div>
+                            <div class="color-opt" data-color="#AF52DE" style="background:#AF52DE"></div>
+                            <div class="color-opt" data-color="#FF9500" style="background:#FF9500"></div>
+                            <div class="color-opt" data-color="#FF2D55" style="background:#FF2D55"></div>
                         </div>
                     </div>
-
                     <div class="setting-row">
                         <span>Bloc-notes sur l'accueil</span>
                         <label class="switch">
@@ -207,7 +164,6 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-
                     <div class="setting-row">
                         <span>Vibrations (Mobile)</span>
                         <label class="switch">
@@ -215,7 +171,6 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    
                     <div class="setting-row">
                         <span>Empêcher la veille (Wake Lock)</span>
                         <label class="switch">
@@ -223,13 +178,11 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    
                     <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
                     <button id="btn-reset" class="btn-danger">Réinitialiser l'application</button>
                 </div>
             </section>
         </main>
-        
         <div id="toast" class="toast">Copié dans le presse-papier !</div>
     </div>
     <script src="script.js"></script>
