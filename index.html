@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unitix | Pro</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔄</text></svg>">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-theme="auto">
+
+    <div class="app-container">
+        <nav class="nav-bar">
+            <div class="logo">Unitix</div>
+            <div class="nav-items">
+                <button class="nav-btn active" data-target="convert-panel">📏 <span>Mesures</span></button>
+                <button class="nav-btn" data-target="currency-panel">💰 <span>Devises</span></button>
+                <button class="nav-btn" data-target="calc-panel">🧮 <span>Calculatrice</span></button>
+                <button class="nav-btn" data-target="notes-panel">📝 <span>Notes</span></button>
+                <button class="nav-btn" id="settings-toggle">⚙️ <span>Réglages</span></button>
+            </div>
+        </nav>
+
+        <main class="content">
+            <div class="settings-overlay hidden" id="settings-panel">
+                <div class="settings-card">
+                    <div class="settings-header">
+                        <h3>Configuration</h3>
+                        <button class="close-btn" id="close-settings">✕</button>
+                    </div>
+                    
+                    <div class="setting-item column">
+                        <label>Mode d'affichage</label>
+                        <div class="segmented-control">
+                            <button class="seg-btn active" data-mode="auto">Auto</button>
+                            <button class="seg-btn" data-mode="light">Clair</button>
+                            <button class="seg-btn" data-mode="dark">Sombre</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-item column">
+                        <label>Couleur d'accent</label>
+                        <div class="color-options">
+                            <div class="color-circle" style="background: #007AFF;" data-color="#007AFF"></div>
+                            <div class="color-circle" style="background: #FF2D55;" data-color="#FF2D55"></div>
+                            <div class="color-circle" style="background: #AF52DE;" data-color="#AF52DE"></div>
+                            <div class="color-circle" style="background: #34C759;" data-color="#34C759"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section id="convert-panel" class="panel active">
+                <header>
+                    <h1>Mesures <span id="total-conv" class="counter">0</span></h1>
+                    <select id="unit-category" class="clean-select">
+                        <option value="length">📏 Longueur</option>
+                        <option value="mass">⚖️ Poids</option>
+                        <option value="volume">💧 Volume</option>
+                        <option value="temperature">🌡️ Température</option>
+                        <option value="speed">🚀 Vitesse</option>
+                    </select>
+                </header>
+
+                <div class="converter-box">
+                    <div class="input-group">
+                        <input type="number" id="unit-input" value="1">
+                        <select id="unit-from" class="unit-select"></select>
+                    </div>
+                    <div class="exchange-icon">⇄</div>
+                    <div class="input-group result-group">
+                        <input type="text" id="unit-output" readonly>
+                        <select id="unit-to" class="unit-select"></select>
+                    </div>
+                </div>
+            </section>
+
+            <section id="currency-panel" class="panel">
+                <header><h1>Devises</h1><p id="last-update" class="subtitle">Chargement des taux...</p></header>
+                <div class="converter-box">
+                    <div class="input-group">
+                        <input type="number" id="currency-input" value="1">
+                        <select id="currency-from" class="unit-select"></select>
+                    </div>
+                    <div class="exchange-icon">⇄</div>
+                    <div class="input-group result-group">
+                        <input type="text" id="currency-output" readonly>
+                        <select id="currency-to" class="unit-select"></select>
+                    </div>
+                </div>
+            </section>
+
+            <section id="calc-panel" class="panel">
+                <div class="calculator-wrapper">
+                    <div class="display">
+                        <div class="previous-operand" id="calc-prev"></div>
+                        <div class="current-operand" id="calc-current">0</div>
+                    </div>
+                    <div class="buttons" id="calc-btns"></div>
+                </div>
+            </section>
+
+            <section id="notes-panel" class="panel">
+                <header><h1>Bloc-notes</h1></header>
+                <div class="notes-area">
+                    <textarea id="note-pad" placeholder="Vos notes ici (sauvegardées automatiquement)..."></textarea>
+                    <div class="note-footer">
+                        <span id="save-status">Vierge</span>
+                        <button id="download-note" class="action-btn">📥 Télécharger .txt</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
