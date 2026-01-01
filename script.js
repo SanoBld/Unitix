@@ -1,14 +1,22 @@
+// --- ENREGISTREMENT SERVICE WORKER (PWA) ---
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Unitix SW Registered'))
+        .catch(err => console.error('SW Error:', err));
+}
+
 // --- ÉTAT GLOBAL & CONFIG ---
 const state = {
     theme: localStorage.getItem('u-theme') || 'auto',
     accent: localStorage.getItem('u-accent') || '#007AFF',
     haptic: localStorage.getItem('u-haptic') !== 'false', // Default true
-    history: JSON.parse(localStorage.getItem('u-history')) || { unit: [], currency: [] }
+    sidebar: localStorage.getItem('u-sidebar') === 'true'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     applyTheme(state.theme);
     applyAccent(state.accent);
+    if(state.sidebar) document.getElementById('sidebar').classList.add('collapsed');
     document.getElementById('toggle-haptic').checked = state.haptic;
     
     initNavigation();
@@ -24,11 +32,21 @@ const formatNumber = (num) => {
     if (num === '' || num === null) return '';
     const n = parseFloat(num);
     if (isNaN(n)) return 'Erreur';
-    return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 6 }).format(n);
+    // Évite les 0.300000004
+    return parseFloat(n.toFixed(10)).toString(); 
 };
 
-const vibrate = () => {
-    if (state.haptic && navigator.vibrate) navigator.vibrate(10);
+// --- RETOUR HAPTIQUE AVANCÉ ---
+const vibrate = (type = 'click') => {
+    if (!state.haptic || !navigator.vibrate) return;
+    
+    const patterns = {
+        click: 10,
+        success: [10, 30, 10],
+        error: [50, 30, 50]
+    };
+
+    navigator.vibrate(patterns[type] || 10);
 };
 
 /* --- THEME & REGLAGES --- */
@@ -59,7 +77,7 @@ function initSettings() {
             state.theme = btn.dataset.mode;
             localStorage.setItem('u-theme', state.theme);
             applyTheme(state.theme);
-            vibrate();
+            vibrate('click');
         });
     });
 
@@ -69,7 +87,7 @@ function initSettings() {
             state.accent = dot.dataset.color;
             localStorage.setItem('u-accent', state.accent);
             applyAccent(state.accent);
-            vibrate();
+            vibrate('success');
         });
     });
 
@@ -77,13 +95,23 @@ function initSettings() {
     document.getElementById('toggle-haptic').addEventListener('change', (e) => {
         state.haptic = e.target.checked;
         localStorage.setItem('u-haptic', state.haptic);
+        if(state.haptic) vibrate('success');
+    });
+
+    // Sidebar
+    document.getElementById('collapse-btn').addEventListener('click', () => {
+        const bar = document.getElementById('sidebar');
+        bar.classList.toggle('collapsed');
+        state.sidebar = bar.classList.contains('collapsed');
+        localStorage.setItem('u-sidebar', state.sidebar);
     });
 
     // Reset
     document.getElementById('btn-reset').addEventListener('click', () => {
-        if(confirm("Réinitialiser l'application ? Toutes vos données seront perdues.")) {
+        if(confirm("Réinitialiser l'application ?")) {
             localStorage.clear();
-            location.reload();
+            vibrate('error');
+            setTimeout(() => location.reload(), 200);
         }
     });
 }
@@ -95,22 +123,25 @@ function initNavigation() {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.nav-btn, .panel').forEach(el => el.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById(btn.dataset.target).classList.add('active');
-            vibrate();
+            
+            const target = document.getElementById(btn.dataset.target);
+            target.style.display = 'block';
+            setTimeout(() => target.classList.add('active'), 10);
+            
+            vibrate('click');
         });
     });
 }
 
-/* --- CONVERTISSEUR PRO --- */
-// Base des conversions (valeur * facteur = base)
+/* --- CONVERTISSEUR PRO & FILTRES --- */
 const unitData = {
-    length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.34, yd: 0.9144, ft: 0.3048, in: 0.0254, nm: 1e-9 },
-    mass: { kg: 1, g: 0.001, mg: 0.000001, t: 1000, lb: 0.453592, oz: 0.0283495, st: 6.35029 },
-    volume: { l: 1, ml: 0.001, cl: 0.01, m3: 1000, gal: 3.78541, pt: 0.473176 },
-    speed: { "km/h": 1, mph: 1.60934, "m/s": 3.6, kn: 1.852, "mach": 1234.8 },
-    pressure: { Pa: 1, hPa: 100, bar: 100000, psi: 6894.76, atm: 101325 },
-    energy: { J: 1, kJ: 1000, cal: 4.184, kcal: 4184, Wh: 3600, kWh: 3.6e6, BTU: 1055.06 },
-    angle: { deg: 1, rad: 57.2958, grad: 0.9 },
+    length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.34, yd: 0.9144, ft: 0.3048, in: 0.0254 },
+    mass: { kg: 1, g: 0.001, t: 1000, lb: 0.453592, oz: 0.0283495 },
+    volume: { l: 1, ml: 0.001, m3: 1000, gal: 3.78541, pt: 0.473176 },
+    speed: { "km/h": 1, mph: 1.60934, "m/s": 3.6, kn: 1.852 },
+    pressure: { Pa: 1, bar: 100000, psi: 6894.76, atm: 101325 },
+    energy: { J: 1, cal: 4.184, kWh: 3.6e6 },
+    angle: { deg: 1, rad: 57.2958 },
     data: { B: 1, KB: 1024, MB: 1048576, GB: 1073741824, TB: 1099511627776 },
     cooking: { ml: 1, tsp: 4.92, tbsp: 14.78, cup: 236.58, fl_oz: 29.57 },
     temperature: { type: 'special' }
@@ -122,8 +153,8 @@ function initUnits() {
     const to = document.getElementById('unit-to');
     const input = document.getElementById('unit-input');
     const output = document.getElementById('unit-output');
+    const search = document.getElementById('unit-search');
 
-    // Initial Population
     const updateOptions = () => {
         const type = cat.value;
         let units = [];
@@ -133,7 +164,28 @@ function initUnits() {
         const html = units.map(u => `<option value="${u}">${u}</option>`).join('');
         from.innerHTML = html;
         to.innerHTML = html;
-        to.selectedIndex = 1; // Select second option by default
+        to.selectedIndex = 1;
+        search.value = '';
+        filterUnits(''); 
+        calculate();
+    };
+
+    // --- RECHERCHE DYNAMIQUE ---
+    const filterUnits = (query) => {
+        const q = query.toLowerCase();
+        [from, to].forEach(select => {
+            Array.from(select.options).forEach(opt => {
+                const match = opt.value.toLowerCase().includes(q);
+                // Utilisation de hidden et display pour compatibilité max
+                opt.hidden = !match;
+                opt.style.display = match ? 'block' : 'none';
+            });
+            // Resélectionne le premier élément visible si la sélection actuelle est masquée
+            if(select.selectedOptions.length > 0 && select.selectedOptions[0].hidden) {
+                const firstVisible = Array.from(select.options).find(o => !o.hidden);
+                if(firstVisible) select.value = firstVisible.value;
+            }
+        });
         calculate();
     };
 
@@ -150,11 +202,9 @@ function initUnits() {
             res = convertTemp(val, uFrom, uTo);
         } else {
             const rates = unitData[type];
-            // Convert to base then to target
             const base = val * rates[uFrom]; 
             res = base / rates[uTo];
         }
-
         output.value = formatNumber(res);
     };
 
@@ -172,9 +222,12 @@ function initUnits() {
     input.addEventListener('input', calculate);
     from.addEventListener('change', calculate);
     to.addEventListener('change', calculate);
+    
+    search.addEventListener('input', (e) => filterUnits(e.target.value));
+
     document.getElementById('btn-swap-unit').addEventListener('click', () => {
         const temp = from.value; from.value = to.value; to.value = temp;
-        calculate(); vibrate();
+        calculate(); vibrate('click');
     });
 
     updateOptions();
@@ -182,20 +235,16 @@ function initUnits() {
 
 /* --- DEVISES --- */
 async function initCurrency() {
-    // Similaire à avant, mais optimisé
     const input = document.getElementById('currency-input');
     const output = document.getElementById('currency-output');
+    const codes = ["EUR","USD","GBP","JPY","CHF","CAD","AUD","CNY"]; // Liste abrégée pour l'exemple
     
-    // Liste plus complète
-    const codes = ["EUR","USD","GBP","JPY","CHF","CAD","AUD","CNY","HKD","NZD","SEK","KRW","SGD","NOK","MXN","INR","RUB","ZAR","TRY","BRL","TWD","DKK","PLN","THB","IDR","HUF","CZK","ILS","CLP","PHP","AED","COP","SAR","MYR","RON"];
-    
-    const opts = codes.sort().map(c => `<option value="${c}">${c}</option>`).join('');
+    const opts = codes.map(c => `<option value="${c}">${c}</option>`).join('');
     document.getElementById('currency-from').innerHTML = opts;
     document.getElementById('currency-to').innerHTML = opts;
     document.getElementById('currency-to').value = 'USD';
 
     let rates = null;
-
     const fetchRates = async () => {
         try {
             const res = await fetch('https://open.er-api.com/v6/latest/EUR');
@@ -206,122 +255,124 @@ async function initCurrency() {
             convert();
         } catch(e) {
             document.getElementById('api-status-dot').style.background = '#FF3B30';
-            document.getElementById('api-details').innerText = 'Erreur réseau';
+            document.getElementById('api-details').innerText = 'Offline';
         }
     };
 
     const convert = () => {
         if(!rates) return;
         const val = parseFloat(input.value);
-        const from = document.getElementById('currency-from').value;
-        const to = document.getElementById('currency-to').value;
         if(isNaN(val)) return;
-        
-        const res = (val / rates[from]) * rates[to];
-        output.value = formatNumber(res.toFixed(2));
+        const res = (val / rates[document.getElementById('currency-from').value]) * rates[document.getElementById('currency-to').value];
+        output.value = res.toFixed(2);
     };
 
     [input, document.getElementById('currency-from'), document.getElementById('currency-to')].forEach(e => e.addEventListener('input', convert));
-    
-    document.getElementById('btn-swap-currency').addEventListener('click', () => {
-        const f = document.getElementById('currency-from');
-        const t = document.getElementById('currency-to');
-        const temp = f.value; f.value = t.value; t.value = temp;
-        convert(); vibrate();
-    });
-
     fetchRates();
 }
 
-/* --- CALCULATRICE SCIENTIFIQUE --- */
+/* --- CALCULATRICE : PEMDAS & DÉCIMALES --- */
 function initCalculator() {
     const currentEl = document.getElementById('calc-current');
     const exprEl = document.getElementById('calc-expr');
-    const tapeEl = document.getElementById('calc-tape');
-    let current = '0';
-    let previous = '';
-    let operation = null;
+    let expression = ''; // Chaîne brute pour l'eval (ex: "2+2*5")
+    let displayVal = '0'; // Affichage utilisateur
     let resetNext = false;
 
-    // Toggle Scientific
+    // Toggle Mode
     document.getElementById('toggle-sci').addEventListener('click', function() {
         document.getElementById('calculator').classList.toggle('scientific');
         this.classList.toggle('active');
-        vibrate();
+        vibrate('click');
     });
 
+    // Animation Effect
+    const triggerAnim = () => {
+        currentEl.classList.remove('pop-anim');
+        void currentEl.offsetWidth; // Trigger reflow
+        currentEl.classList.add('pop-anim');
+    };
+
     const updateDisplay = () => {
-        currentEl.innerText = formatNumber(current) || '0';
-        exprEl.innerText = previous + (operation ? ` ${operation}` : '');
+        currentEl.innerText = displayVal;
+        exprEl.innerText = expression.replace(/\*/g, '×').replace(/\//g, '÷').replace('Math.', '');
+        triggerAnim();
     };
 
-    const appendNumber = (num) => {
-        if(resetNext) { current = ''; resetNext = false; }
-        if(num === '.' && current.includes('.')) return;
-        if(current === '0' && num !== '.') current = num;
-        else current += num;
-        updateDisplay();
-    };
-
-    const chooseOp = (op) => {
-        if(current === '') return;
-        if(previous !== '') compute();
-        operation = op;
-        previous = current;
-        resetNext = true;
-        updateDisplay();
-    };
-
-    const compute = () => {
-        let computation;
-        const prev = parseFloat(previous);
-        const curr = parseFloat(current);
-        if(isNaN(prev) || isNaN(curr)) return;
-
-        switch(operation) {
-            case '+': computation = prev + curr; break;
-            case '-': computation = prev - curr; break;
-            case '*': computation = prev * curr; break;
-            case '/': computation = prev / curr; break;
+    const addToExpr = (val) => {
+        if(resetNext) {
+            expression = '';
+            displayVal = '';
+            resetNext = false;
         }
-
-        addToTape(`${formatNumber(prev)} ${operation} ${formatNumber(curr)} = ${formatNumber(computation)}`);
-        current = computation.toString();
-        operation = null;
-        previous = '';
-        resetNext = true;
+        // Évite double opérateurs
+        const lastChar = expression.slice(-1);
+        if(['+','-','*','/'].includes(val) && ['+','-','*','/'].includes(lastChar)) {
+            expression = expression.slice(0, -1) + val;
+        } else {
+            expression += val;
+            if(['+','-','*','/'].includes(val)) displayVal = '';
+            else displayVal = (displayVal === '0' ? val : displayVal + val);
+        }
         updateDisplay();
     };
 
-    const scientificOp = (fn) => {
-        const val = parseFloat(current);
+    const safeCalculate = () => {
+        try {
+            // Utilisation de Function() pour un eval scopé (respecte PEMDAS)
+            // On remplace les fonctions mathématiques pour JS
+            let safeExpr = expression
+                .replace(/×/g, '*')
+                .replace(/÷/g, '/');
+                
+            // Execution
+            let result = new Function('return ' + safeExpr)();
+            
+            // Correction décimale (ex: 0.1+0.2 -> 0.3)
+            // .toPrecision(12) nettoie les queues de flottants, parseFloat supprime les zéros inutiles
+            result = parseFloat(parseFloat(result).toPrecision(12));
+
+            displayVal = result.toString();
+            expression = result.toString(); // On garde le résultat pour enchainer
+            resetNext = true;
+            updateDisplay();
+            vibrate('success');
+        } catch (e) {
+            displayVal = 'Erreur';
+            expression = '';
+            updateDisplay();
+            vibrate('error');
+        }
+    };
+
+    const mathFunc = (fn) => {
+        if(resetNext) { expression = displayVal; resetNext = false; }
+        
+        let val = parseFloat(displayVal || expression);
         if(isNaN(val)) return;
-        let res = 0;
-        
-        switch(fn) {
-            case 'sin': res = Math.sin(val * Math.PI / 180); break; // Deg
-            case 'cos': res = Math.cos(val * Math.PI / 180); break;
-            case 'tan': res = Math.tan(val * Math.PI / 180); break;
-            case 'log': res = Math.log10(val); break;
-            case 'ln':  res = Math.log(val); break;
-            case 'sqrt': res = Math.sqrt(val); break;
-            case 'pow': res = Math.pow(val, 2); break;
-            case 'pi': res = Math.PI; break;
+
+        let snippet = '';
+        if(fn === 'sin') snippet = `Math.sin(${val} * Math.PI / 180)`;
+        else if(fn === 'cos') snippet = `Math.cos(${val} * Math.PI / 180)`;
+        else if(fn === 'tan') snippet = `Math.tan(${val} * Math.PI / 180)`;
+        else if(fn === 'sqrt') snippet = `Math.sqrt(${val})`;
+        else if(fn === 'log') snippet = `Math.log10(${val})`;
+        else if(fn === 'ln') snippet = `Math.log(${val})`;
+        else if(fn === 'pow') snippet = `Math.pow(${val}, 2)`;
+        else if(fn === 'pi') { 
+            val = Math.PI; 
+            displayVal = val.toFixed(4); 
+            expression += val; 
+            updateDisplay(); 
+            return;
         }
-        
-        current = res.toString();
-        resetNext = true;
-        updateDisplay();
+
+        // Remplace le dernier nombre par la fonction
+        // Note: C'est une implémentation simplifiée pour le display
+        expression = snippet;
+        safeCalculate();
     };
 
-    const addToTape = (str) => {
-        const line = document.createElement('div');
-        line.innerText = str;
-        tapeEl.prepend(line); // Ajoute en haut
-        if(tapeEl.children.length > 4) tapeEl.lastChild.remove();
-    };
-
-    // Events Click
     document.querySelector('.calculator-wrapper').addEventListener('click', (e) => {
         const btn = e.target.closest('button');
         if(!btn) return;
@@ -329,71 +380,32 @@ function initCalculator() {
         const key = btn.dataset.key;
         const fn = btn.dataset.fn;
         
-        if(key) {
-            vibrate();
-            if(!isNaN(key) || key === '.') appendNumber(key);
-            else if(['+','-','*','/'].includes(key)) chooseOp(key);
-            else if(key === '=') compute();
-            else if(key === 'AC') { current='0'; previous=''; operation=null; updateDisplay(); }
-            else if(key === 'DEL') { current = current.slice(0,-1) || '0'; updateDisplay(); }
-            else if(key === '%') { current = (parseFloat(current)/100).toString(); updateDisplay(); }
-        } else if(fn) {
-            vibrate();
-            scientificOp(fn);
-        }
-    });
+        vibrate('click');
 
-    // Events Clavier Physique
-    document.addEventListener('keydown', (e) => {
-        if(!document.getElementById('calc-panel').classList.contains('active')) return;
-        
-        const key = e.key;
-        if((key >= '0' && key <= '9') || key === '.') appendNumber(key);
-        if(['+','-','*','/'].includes(key)) chooseOp(key);
-        if(key === 'Enter' || key === '=') { e.preventDefault(); compute(); }
-        if(key === 'Backspace') { current = current.slice(0,-1) || '0'; updateDisplay(); }
-        if(key === 'Escape') { current='0'; previous=''; operation=null; updateDisplay(); }
+        if(key) {
+            if(key === 'AC') { expression = ''; displayVal = '0'; updateDisplay(); }
+            else if(key === 'DEL') { 
+                expression = expression.slice(0, -1);
+                displayVal = displayVal.slice(0, -1) || '0';
+                updateDisplay();
+            }
+            else if(key === '=') safeCalculate();
+            else addToExpr(key);
+        } else if(fn) {
+            if(fn === '(' || fn === ')') addToExpr(fn);
+            else mathFunc(fn);
+        }
     });
 }
 
-/* --- NOTES & PARTAGE --- */
 function initNotes() {
     const pad = document.getElementById('note-pad');
-    const status = document.getElementById('save-status');
     pad.value = localStorage.getItem('u-note') || '';
-
     pad.addEventListener('input', () => {
         localStorage.setItem('u-note', pad.value);
-        status.innerText = "Sauvegarde...";
-        setTimeout(() => status.innerText = "Synchronisé", 800);
     });
-
     document.getElementById('copy-note').addEventListener('click', () => {
         navigator.clipboard.writeText(pad.value);
-        status.innerText = "Copié !";
-        vibrate();
-        setTimeout(() => status.innerText = "Synchronisé", 2000);
-    });
-
-    document.getElementById('share-note').addEventListener('click', async () => {
-        if(navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'Mes Notes Unitix',
-                    text: pad.value
-                });
-            } catch(e) { console.log('Share cancel'); }
-        } else {
-            alert("Le partage n'est pas supporté sur ce navigateur.");
-        }
-    });
-    
-    document.getElementById('download-note').addEventListener('click', () => {
-        const blob = new Blob([pad.value], {type: 'text/plain'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'notes.txt';
-        a.click();
+        vibrate('success');
     });
 }

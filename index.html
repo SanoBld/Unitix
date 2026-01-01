@@ -2,38 +2,46 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#F5F5F7">
-    <title>Unitix | Pro Suite</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Unitix</title>
+    
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
     <link rel="stylesheet" href="style.css">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body data-theme="auto">
 
     <div class="app-container">
-        <nav class="nav-bar">
+        <nav class="nav-bar" id="sidebar">
             <div class="logo">
                 <div class="logo-icon"><i class="ph-fill ph-lightning"></i></div>
-                <span>Unitix<span class="pro-badge">PRO</span></span>
+                <span class="logo-text">Unitix</span>
+                <button id="collapse-btn" class="icon-btn-small" title="Réduire le menu">
+                    <i class="ph ph-caret-left"></i>
+                </button>
             </div>
             <div class="nav-items">
                 <button class="nav-btn active" data-target="convert-panel">
-                    <i class="ph ph-ruler"></i> <span>Convertisseur</span>
+                    <i class="ph ph-ruler"></i> <span class="nav-label">Convertir</span>
                 </button>
                 <button class="nav-btn" data-target="currency-panel">
-                    <i class="ph ph-currency-dollar"></i> <span>Devises</span>
+                    <i class="ph ph-currency-dollar"></i> <span class="nav-label">Devises</span>
                 </button>
                 <button class="nav-btn" data-target="calc-panel">
-                    <i class="ph ph-calculator"></i> <span>Calculatrice</span>
+                    <i class="ph ph-calculator"></i> <span class="nav-label">Calculs</span>
                 </button>
                 <button class="nav-btn" data-target="notes-panel">
-                    <i class="ph ph-notepad"></i> <span>Notes</span>
+                    <i class="ph ph-notepad"></i> <span class="nav-label">Notes</span>
                 </button>
                 <div class="spacer"></div>
                 <button class="nav-btn" data-target="settings-panel">
-                    <i class="ph ph-gear"></i> <span>Réglages</span>
+                    <i class="ph ph-gear"></i> <span class="nav-label">Réglages</span>
                 </button>
             </div>
         </nav>
@@ -62,6 +70,11 @@
                 </header>
 
                 <div class="converter-wrapper">
+                    <div class="search-bar-container">
+                        <i class="ph ph-magnifying-glass"></i>
+                        <input type="text" id="unit-search" placeholder="Filtrer unités (ex: km, mile)...">
+                    </div>
+
                     <div class="converter-card">
                         <div class="input-row">
                             <input type="text" id="unit-input" value="1" inputmode="decimal" placeholder="0">
@@ -78,11 +91,6 @@
                             <input type="text" id="unit-output" readonly placeholder="0">
                             <select id="unit-to" class="unit-select"></select>
                         </div>
-                    </div>
-
-                    <div class="history-section">
-                        <h3>Historique</h3>
-                        <ul id="unit-history" class="history-list"></ul>
                     </div>
                 </div>
             </section>
@@ -114,10 +122,6 @@
                             <select id="currency-to" class="unit-select"></select>
                         </div>
                     </div>
-                     <div class="history-section">
-                        <h3>Derniers échanges</h3>
-                        <ul id="currency-history" class="history-list"></ul>
-                    </div>
                 </div>
             </section>
 
@@ -143,6 +147,8 @@
                             <button class="sci-btn" data-fn="log">log</button>
                             <button class="sci-btn" data-fn="ln">ln</button>
                             <button class="sci-btn" data-fn="sqrt">√</button>
+                            <button class="sci-btn" data-fn="(">(</button>
+                            <button class="sci-btn" data-fn=")">)</button>
                             <button class="sci-btn" data-fn="pow">x²</button>
                             <button class="sci-btn" data-fn="pi">π</button>
                         </div>
@@ -201,11 +207,9 @@
 
             <section id="settings-panel" class="panel">
                 <header><h1>Réglages</h1></header>
-                
                 <div class="settings-list">
                     <div class="setting-group">
                         <h2>Apparence</h2>
-                        
                         <div class="setting-row">
                             <div class="setting-label">
                                 <i class="ph ph-moon"></i>
@@ -217,7 +221,6 @@
                                 <button class="seg-btn" data-mode="dark">Sombre</button>
                             </div>
                         </div>
-
                         <div class="setting-row">
                             <div class="setting-label">
                                 <i class="ph ph-palette"></i>
@@ -234,25 +237,24 @@
                     </div>
 
                     <div class="setting-group">
-                        <h2>Données & Système</h2>
+                        <h2>Système</h2>
                         <div class="setting-row">
                             <div class="setting-label">
                                 <i class="ph ph-vibrate"></i>
-                                <span>Retour haptique</span>
+                                <span>Haptique</span>
                             </div>
                             <input type="checkbox" id="toggle-haptic" class="ios-switch" checked>
                         </div>
                         <div class="setting-row">
                             <div class="setting-label">
                                 <i class="ph ph-trash"></i>
-                                <span>Réinitialiser tout</span>
+                                <span>Reset Données</span>
                             </div>
                             <button class="danger-btn" id="btn-reset">Effacer</button>
                         </div>
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
     <script src="script.js"></script>
