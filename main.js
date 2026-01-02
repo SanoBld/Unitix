@@ -1,7 +1,7 @@
-import { initCalculator } from './calcul.js';
-import { initUnits } from './mesures.js';
-import { initCurrency } from './devises.js';
-import { initNotes } from './notes.js';
+import { initUnits as initMesures } from './js/mesures.js';
+import { initCurrency as initDevises } from './js/devises.js';
+import { initCalculator as initCalcul } from './js/calcul.js';
+import { initNotes } from './js/notes.js';
 
 // Gestion du thème couleur
 function applyAccent(hex) {
