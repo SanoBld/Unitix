@@ -3,153 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Unitix | Pro</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
+    <title>Unitix</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body data-theme="auto">
-
     <div class="app-container">
         <nav class="nav-bar">
-            <div class="logo">
-                <i class="ph-fill ph-polygon"></i> Unitix
-            </div>
+            <div class="logo"><i class="ph-fill ph-bolt"></i> Unitix</div>
             <div class="nav-items">
-                <button class="nav-btn active" data-target="convert-panel">
-                    <i class="ph ph-ruler"></i> <span>Mesures</span>
-                </button>
-                <button class="nav-btn" data-target="currency-panel">
-                    <i class="ph ph-currency-eur"></i> <span>Devises</span>
-                </button>
-                <button class="nav-btn" data-target="calc-panel">
-                    <i class="ph ph-calculator"></i> <span>Calcul</span>
-                </button>
-                <button class="nav-btn hidden" data-target="notes-panel" id="nav-notes">
-                    <i class="ph ph-note-pencil"></i> <span>Notes</span>
-                </button>
+                <button class="nav-btn active" data-target="convert-panel"><i class="ph ph-ruler"></i><span>Mesures</span></button>
+                <button class="nav-btn" data-target="currency-panel"><i class="ph ph-coins"></i><span>Devises</span></button>
+                <button class="nav-btn" data-target="calc-panel"><i class="ph ph-calculator"></i><span>Calcul</span></button>
+                <button class="nav-btn hidden" data-target="notes-panel" id="nav-notes"><i class="ph ph-note-pencil"></i><span>Notes</span></button>
                 <div class="spacer"></div>
-                <button class="nav-btn" id="settings-toggle">
-                    <i class="ph ph-gear"></i> <span>Réglages</span>
-                </button>
+                <button class="nav-btn" id="settings-toggle"><i class="ph ph-gear"></i><span>Réglages</span></button>
             </div>
         </nav>
 
         <main class="content">
             <section id="convert-panel" class="panel active">
                 <header><h1>Mesures</h1></header>
-                <div class="converter-card">
+                <div class="card">
                     <select id="unit-category" class="cat-select">
-                        <option value="length">Longueur</option>
-                        <option value="mass">Poids</option>
+                        <option value="length">Longueur (km, hm, dam, m...)</option>
+                        <option value="mass">Poids & Masse</option>
                         <option value="data">Stockage</option>
                         <option value="temp">Température</option>
                     </select>
-                    <div class="input-group">
-                        <input type="number" id="unit-input" placeholder="0">
-                        <select id="unit-from" class="unit-select"></select>
-                    </div>
-                    <div class="swap-row">
-                        <button id="btn-swap-unit" class="swap-btn"><i class="ph ph-arrows-down-up"></i></button>
-                    </div>
-                    <div class="input-group result">
-                        <input type="text" id="unit-output" readonly placeholder="Résultat">
-                        <select id="unit-to" class="unit-select"></select>
+                    <div class="input-stack">
+                        <div class="input-group" id="group-from">
+                            <input type="number" id="unit-input" placeholder="0">
+                            <select id="unit-from"></select>
+                        </div>
+                        <div class="swap-zone">
+                            <button id="btn-swap-unit" class="swap-btn"><i class="ph ph-arrows-down-up"></i></button>
+                        </div>
+                        <div class="input-group result" id="group-to">
+                            <input type="text" id="unit-output" readonly placeholder="Résultat">
+                            <select id="unit-to"></select>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <section id="currency-panel" class="panel">
-                <header><h1>Devises</h1></header>
-                <div class="converter-card">
-                    <div class="api-status">
-                        <span class="dot" id="api-dot"></span> <span id="api-log">Chargement...</span>
-                    </div>
-                    <div class="input-group">
-                        <input type="number" id="currency-input" placeholder="0">
-                        <select id="currency-from" class="unit-select"></select>
-                    </div>
-                    <div class="swap-row">
-                        <button id="btn-swap-currency" class="swap-btn"><i class="ph ph-arrows-down-up"></i></button>
-                    </div>
-                    <div class="input-group result">
-                        <input type="text" id="currency-output" readonly placeholder="0.00">
-                        <select id="currency-to" class="unit-select"></select>
+                <header>
+                    <h1>Devises</h1>
+                    <div id="api-status" class="api-badge"><span class="dot"></span><span id="api-text">Sync...</span></div>
+                </header>
+                <div class="card">
+                    <div class="input-stack">
+                        <div class="input-group">
+                            <input type="number" id="currency-input" placeholder="0">
+                            <select id="currency-from"></select>
+                        </div>
+                        <div class="swap-zone">
+                            <button id="btn-swap-currency" class="swap-btn"><i class="ph ph-arrows-down-up"></i></button>
+                        </div>
+                        <div class="input-group result">
+                            <input type="text" id="currency-output" readonly placeholder="0.00">
+                            <select id="currency-to"></select>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <section id="calc-panel" class="panel">
                 <header><h1>Calculatrice</h1></header>
-                <div class="calculator-card">
-                    <div class="calc-display">
-                        <div id="calc-prev" class="prev-op"></div>
-                        <div id="calc-curr" class="curr-op">0</div>
+                <div class="calc-container">
+                    <div class="calc-screen">
+                        <div id="calc-prev"></div>
+                        <div id="calc-curr">0</div>
                     </div>
                     <div id="calc-btns" class="calc-grid"></div>
                 </div>
             </section>
 
             <section id="notes-panel" class="panel">
-                <header>
-                    <h1>Bloc-notes</h1>
-                    <button id="download-note" class="icon-btn"><i class="ph ph-download-simple"></i></button>
-                </header>
-                <div class="notes-wrapper">
-                    <textarea id="note-pad" placeholder="Écrivez quelque chose..."></textarea>
-                    <div class="note-controls">
-                        <span id="save-status">Vierge</span>
-                    </div>
-                </div>
+                <header><h1>Notes</h1></header>
+                <textarea id="note-pad" placeholder="Écrivez ici..."></textarea>
             </section>
 
-            <section id="settings-panel" class="settings-overlay hidden">
+            <div id="settings-panel" class="overlay hidden">
                 <div class="settings-card">
-                    <div class="settings-header">
-                        <h2>Réglages</h2>
-                        <button id="close-settings" class="icon-btn"><i class="ph ph-x"></i></button>
+                    <h2>Réglages</h2>
+                    <div class="set-row">
+                        <span>Activer Bloc-notes</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-notes">
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                    
-                    <div class="settings-content">
-                        <div class="setting-group">
-                            <h3>Apparence</h3>
-                            <div class="segmented-control">
-                                <button class="seg-btn" data-theme="light">Clair</button>
-                                <button class="seg-btn" data-theme="dark">Sombre</button>
-                                <button class="seg-btn" data-theme="auto">Auto</button>
-                            </div>
-                        </div>
-
-                        <div class="setting-group">
-                            <h3>Fonctionnalités</h3>
-                            <div class="setting-row">
-                                <div class="setting-label">
-                                    <i class="ph ph-notebook"></i>
-                                    <span>Activer le Bloc-notes</span>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" id="toggle-notes">
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="setting-group">
-                            <h3>Accentuation</h3>
-                            <div class="color-picker">
-                                <button class="color-dot" data-color="#007AFF" style="background:#007AFF"></button>
-                                <button class="color-dot" data-color="#FF2D55" style="background:#FF2D55"></button>
-                                <button class="color-dot" data-color="#AF52DE" style="background:#AF52DE"></button>
-                                <button class="color-dot" data-color="#34C759" style="background:#34C759"></button>
-                                <button class="color-dot" data-color="#FF9500" style="background:#FF9500"></button>
-                            </div>
-                        </div>
-
-                        <button id="btn-reset" class="danger-btn">Réinitialiser l'application</button>
-                    </div>
+                    <button id="btn-reset" class="danger-btn">Réinitialiser</button>
+                    <button id="close-settings" class="close-btn">Fermer</button>
                 </div>
-            </section>
+            </div>
         </main>
     </div>
     <script src="script.js"></script>
