@@ -4,10 +4,10 @@ const ASSETS = [
   './index.html',
   './style.css',
   './main.js', 
-  './calcul.js',
-  './devises.js',
-  './mesures.js',
-  './notes.js'
+  './js/calcul.js',
+  './js/devises.js',
+  './js/mesures.js',
+  './js/notes.js'
 ];
 
 self.addEventListener('install', (e) => {
