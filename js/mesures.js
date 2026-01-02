@@ -1,91 +1,94 @@
-/**
- * Module Mesures pour Unitix
- * Gère les conversions de distances, masses, données et températures
- */
-
 export function initUnits() {
-    // 1. Définition des rapports de conversion (Base = mètre, gramme, octet)
     const units = {
-        length: { 
-            km: 1000, hm: 100, dam: 10, m: 1, dm: 0.1, cm: 0.01, mm: 0.001, 
-            mi: 1609.34, ft: 0.3048, in: 0.0254 
-        },
-        mass: { 
-            t: 1000, kg: 1, hg: 0.1, dag: 0.01, g: 0.001, mg: 0.000001, 
-            lb: 0.4535, oz: 0.02835 
-        },
-        data: { 
-            B: 1, KB: 1024, MB: 1048576, GB: 1073741824, TB: 1099511627776 
-        },
-        temp: { type: 'special' } // La température nécessite des formules (pas de simples rapports)
+        length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.34, ft: 0.3048, in: 0.0254 },
+        mass: { kg: 1, g: 0.001, mg: 0.000001, t: 1000, lb: 0.4535, oz: 0.02835 },
+        data: { o: 1, Ko: 1024, Mo: 1048576, Go: 1073741824 },
+        temp: { type: 'special' }
     };
 
-    const cat = document.getElementById('unit-category');
+    const catSelect = document.getElementById('unit-category');
+    const segments = document.querySelectorAll('.segment');
     const from = document.getElementById('unit-from');
     const to = document.getElementById('unit-to');
     const input = document.getElementById('unit-input');
     const output = document.getElementById('unit-output');
-    const btnSwap = document.getElementById('btn-swap-unit');
+    const swapBtn = document.getElementById('btn-swap-unit');
 
-    if (!cat || !input) return;
+    if (!input) return;
 
-    // 2. Logique de conversion
-    const convert = () => {
-        const val = parseFloat(input.value);
-        if (isNaN(val)) {
-            output.value = '';
-            return;
-        }
-
-        if (cat.value === 'temp') {
-            // Formules spécifiques pour Température
-            let celsius;
-            if (from.value === 'C') celsius = val;
-            else if (from.value === 'F') celsius = (val - 32) * 5 / 9;
-            else if (from.value === 'K') celsius = val - 273.15;
-
-            let res;
-            if (to.value === 'C') res = celsius;
-            else if (to.value === 'F') res = (celsius * 9 / 5) + 32;
-            else if (to.value === 'K') res = celsius + 273.15;
+    // Gestion des onglets segments
+    segments.forEach(seg => {
+        seg.addEventListener('click', () => {
+            // Visuel
+            segments.forEach(s => s.classList.remove('active'));
+            seg.classList.add('active');
             
-            output.value = res.toFixed(2);
-        } else {
-            // Calcul standard via les rapports
-            const res = (val * units[cat.value][from.value]) / units[cat.value][to.value];
-            
-            // Formatage lisible
-            if (res < 0.0001) output.value = res.toExponential(4);
-            else output.value = res.toLocaleString('fr-FR', { maximumFractionDigits: 6 });
-        }
-    };
+            // Logique
+            catSelect.value = seg.dataset.cat;
+            populate();
+        });
+    });
 
-    // 3. Remplissage des listes déroulantes (Select)
-    const populate = () => {
-        const keys = cat.value === 'temp' ? ['C', 'F', 'K'] : Object.keys(units[cat.value]);
-        const options = keys.map(k => `<option value="${k}">${k}</option>`).join('');
+    function populate() {
+        const cat = catSelect.value;
+        let keys = [];
         
-        from.innerHTML = to.innerHTML = options;
-        
-        // Sélection par défaut intelligente
+        if (cat === 'temp') keys = ['C', 'F', 'K'];
+        else keys = Object.keys(units[cat]);
+
+        const html = keys.map(k => `<option value="${k}">${k}</option>`).join('');
+        from.innerHTML = html;
+        to.innerHTML = html;
         to.value = keys[1] || keys[0];
         convert();
-    };
-
-    // 4. Événements
-    cat.onchange = populate;
-    [input, from, to].forEach(el => el.oninput = convert);
-    
-    if (btnSwap) {
-        btnSwap.onclick = () => {
-            const temp = from.value;
-            from.value = to.value;
-            to.value = temp;
-            if (window.navigator.vibrate) window.navigator.vibrate(10);
-            convert();
-        };
     }
 
-    // Initialisation
+    function convert() {
+        const val = parseFloat(input.value);
+        if (isNaN(val)) { output.value = ''; return; }
+
+        const cat = catSelect.value;
+        const uFrom = from.value;
+        const uTo = to.value;
+
+        let res = 0;
+
+        if (cat === 'temp') {
+            // Logique Temp
+            let c = val;
+            if (uFrom === 'F') c = (val - 32) * 5/9;
+            if (uFrom === 'K') c = val - 273.15;
+            
+            if (uTo === 'C') res = c;
+            else if (uTo === 'F') res = (c * 9/5) + 32;
+            else if (uTo === 'K') res = c + 273.15;
+        } else {
+            // Logique Standard
+            const ratioFrom = units[cat][uFrom];
+            const ratioTo = units[cat][uTo];
+            res = (val * ratioFrom) / ratioTo;
+        }
+
+        // Formatage intelligent
+        output.value = (res % 1 !== 0) ? parseFloat(res.toFixed(4)) : res;
+    }
+
+    // Événements
+    input.addEventListener('input', convert);
+    from.addEventListener('change', convert);
+    to.addEventListener('change', convert);
+    
+    swapBtn.addEventListener('click', () => {
+        const tmp = from.value;
+        from.value = to.value;
+        to.value = tmp;
+        convert();
+        
+        // Animation rotation
+        const icon = swapBtn.querySelector('i');
+        icon.style.transition = '0.3s';
+        icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+
     populate();
 }

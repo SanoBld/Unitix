@@ -2,114 +2,171 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Unitix</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="manifest" href="manifest.json">
 </head>
 <body data-theme="auto">
     <div class="app-container">
         <nav class="nav-bar">
-            <div class="logo"><i class="ph-fill ph-bolt"></i> Unitix</div>
-            <div class="nav-items">
-                <button class="nav-btn active" data-target="convert-panel"><i class="ph ph-ruler"></i><span>Mesures</span></button>
-                <button class="nav-btn" data-target="currency-panel"><i class="ph ph-coins"></i><span>Devises</span></button>
-                <button class="nav-btn" data-target="calc-panel"><i class="ph ph-calculator"></i><span>Calcul</span></button>
-                <button class="nav-btn" data-target="notes-panel" id="nav-notes"><i class="ph ph-note-pencil"></i><span>Notes</span></button>
-                <div class="spacer"></div>
-                <button class="nav-btn" id="settings-toggle"><i class="ph ph-gear"></i><span>Réglages</span></button>
+            <div class="logo">
+                <div class="logo-icon"><i class="ph-fill ph-lightning"></i></div>
+                <span>Unitix</span>
             </div>
+            
+            <div class="nav-group">
+                <button class="nav-btn active" data-target="convert-panel">
+                    <i class="ph ph-ruler"></i>
+                    <span>Mesures</span>
+                </button>
+                <button class="nav-btn" data-target="currency-panel">
+                    <i class="ph ph-currency-dollar"></i>
+                    <span>Devises</span>
+                </button>
+                <button class="nav-btn" data-target="calc-panel">
+                    <i class="ph ph-calculator"></i>
+                    <span>Calcul</span>
+                </button>
+                <button class="nav-btn" data-target="notes-panel">
+                    <i class="ph ph-notebook"></i>
+                    <span>Notes</span>
+                </button>
+            </div>
+
+            <div class="spacer"></div>
+
+            <button class="nav-btn settings-btn" id="settings-toggle">
+                <i class="ph ph-sliders-horizontal"></i>
+                <span>Réglages</span>
+            </button>
         </nav>
 
         <main class="content">
             <section id="convert-panel" class="panel active">
-                <header><h1>Mesures</h1></header>
-                <div class="card">
-                    <select id="unit-category" class="cat-select">
-                        <option value="length">Longueur (km, m, ...)</option>
-                        <option value="mass">Poids & Masse</option>
-                        <option value="data">Stockage (Go, Mo...)</option>
+                <header class="panel-header">
+                    <h1>Convertisseur</h1>
+                </header>
+                <div class="ios-card">
+                    <div class="segment-control">
+                        <button class="segment active" data-cat="length">Long.</button>
+                        <button class="segment" data-cat="mass">Masse</button>
+                        <button class="segment" data-cat="data">Data</button>
+                        <button class="segment" data-cat="temp">Temp.</button>
+                    </div>
+                    <select id="unit-category" style="display:none;">
+                        <option value="length" selected>Longueurs</option>
+                        <option value="mass">Masse</option>
+                        <option value="data">Données</option>
                         <option value="temp">Température</option>
                     </select>
-                    <div class="input-stack">
-                        <div class="input-group">
+
+                    <div class="converter-layout">
+                        <div class="input-row">
                             <input type="number" id="unit-input" placeholder="0" inputmode="decimal">
-                            <select id="unit-from"></select>
+                            <div class="select-wrapper">
+                                <select id="unit-from"></select>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
                         </div>
-                        <div class="swap-zone"><button id="btn-swap-unit" class="swap-btn"><i class="ph ph-arrows-down-up"></i></button></div>
-                        <div class="input-group result">
-                            <input type="text" id="unit-output" readonly placeholder="Résultat">
-                            <select id="unit-to"></select>
+                        
+                        <div class="swap-container">
+                            <button id="btn-swap-unit" class="circle-btn"><i class="ph ph-arrow-down"></i></button>
+                        </div>
+
+                        <div class="input-row result-row">
+                            <input type="text" id="unit-output" readonly placeholder="0">
+                            <div class="select-wrapper">
+                                <select id="unit-to"></select>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
             <section id="currency-panel" class="panel">
-                <header>
+                <header class="panel-header">
                     <h1>Devises</h1>
-                    <div id="api-status" class="api-badge"><span class="dot"></span><span id="api-text">Sync...</span></div>
+                    <div id="api-status" class="status-pill offline">Sync...</div>
                 </header>
-                <div class="card">
-                    <div class="input-stack">
-                        <div class="input-group">
+                <div class="ios-card">
+                    <div class="converter-layout">
+                        <div class="input-row">
                             <input type="number" id="currency-input" placeholder="0" inputmode="decimal">
-                            <select id="currency-from"></select>
+                            <div class="select-wrapper">
+                                <select id="currency-from"></select>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
                         </div>
-                        <div class="swap-zone"><button id="btn-swap-currency" class="swap-btn"><i class="ph ph-arrows-down-up"></i></button></div>
-                        <div class="input-group result">
+
+                        <div class="swap-container">
+                            <button id="btn-swap-currency" class="circle-btn"><i class="ph ph-arrow-down"></i></button>
+                        </div>
+
+                        <div class="input-row result-row">
                             <input type="text" id="currency-output" readonly placeholder="0.00">
-                            <select id="currency-to"></select>
+                            <div class="select-wrapper">
+                                <select id="currency-to"></select>
+                                <i class="ph ph-caret-down"></i>
+                            </div>
                         </div>
                     </div>
+                    <div class="footnote">Taux : open.er-api.com</div>
                 </div>
             </section>
 
             <section id="calc-panel" class="panel">
-                <header><h1>Calculatrice</h1></header>
-                <div class="card">
-                    <div class="calc-display">
-                        <div id="calc-prev" class="calc-prev"></div>
-                        <div id="calc-curr" class="calc-curr">0</div>
+                <div class="calc-container">
+                    <div class="calc-screen">
+                        <div id="calc-prev" class="history"></div>
+                        <div id="calc-curr" class="current">0</div>
                     </div>
-                    <div id="calc-btns" class="calc-grid">
-                        </div>
+                    <div id="calc-btns" class="calc-keypad"></div>
                 </div>
             </section>
 
             <section id="notes-panel" class="panel">
-                <header><h1>Bloc-notes</h1></header>
-                <div class="card">
-                    <textarea id="note-pad" placeholder="Écrivez vos notes ici..."></textarea>
+                <header class="panel-header"><h1>Notes</h1></header>
+                <div class="ios-card paper-card">
+                    <textarea id="note-pad" placeholder="Tapez quelque chose..."></textarea>
                 </div>
             </section>
-
-            <div id="settings-panel" class="overlay hidden">
-                <div class="settings-card">
-                    <h2>Réglages</h2>
-                    <div class="setting-group">
-                        <label>Couleur d'accent</label>
-                        <div class="color-picker">
-                            <div class="color-dot" style="background:#007AFF" data-color="#007AFF"></div>
-                            <div class="color-dot" style="background:#FF2D55" data-color="#FF2D55"></div>
-                            <div class="color-dot" style="background:#AF52DE" data-color="#AF52DE"></div>
-                            <div class="color-dot" style="background:#34C759" data-color="#34C759"></div>
-                        </div>
-                    </div>
-                    <button id="btn-reset" class="danger-btn">Réinitialiser l'app</button>
-                    <button id="close-settings" class="close-btn">Fermer</button>
-                </div>
-            </div>
         </main>
+    </div>
+
+    <div id="settings-panel" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Apparence</h2>
+                <button id="close-settings" class="close-icon"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="label">Couleur d'accentuation</p>
+                <div class="color-options">
+                    <div class="color-dot" style="background:#007AFF" data-color="#007AFF"></div>
+                    <div class="color-dot" style="background:#FF2D55" data-color="#FF2D55"></div>
+                    <div class="color-dot" style="background:#5856D6" data-color="#5856D6"></div>
+                    <div class="color-dot" style="background:#34C759" data-color="#34C759"></div>
+                    <div class="color-dot" style="background:#FF9500" data-color="#FF9500"></div>
+                </div>
+                
+                <hr class="divider">
+                
+                <button id="btn-reset" class="danger-row">
+                    <i class="ph ph-trash"></i> Réinitialiser les données
+                </button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="main.js"></script>
     <script>
+        // Enregistrement PWA simplifié
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./service-worker.js');
+            navigator.serviceWorker.register('service-worker.js').catch(e => console.log(e));
         }
     </script>
-    <script type="module" src="main.js"></script>
-</body>
 </body>
 </html>

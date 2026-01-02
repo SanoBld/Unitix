@@ -1,11 +1,13 @@
-const CACHE_NAME = 'unitix-v2-core';
+const CACHE_NAME = 'unitix-v3-fixed';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './main.js', 
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://unpkg.com/@phosphor-icons/web'
+  './calcul.js',
+  './devises.js',
+  './mesures.js',
+  './notes.js'
 ];
 
 self.addEventListener('install', (e) => {
@@ -27,13 +29,10 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Stratégie spécifique pour l'API (Network First, pas de cache pour les taux)
   if (e.request.url.includes('open.er-api.com')) {
     e.respondWith(fetch(e.request));
     return;
   }
-
-  // Cache First pour les assets statiques
   e.respondWith(
     caches.match(e.request).then((response) => {
       return response || fetch(e.request);

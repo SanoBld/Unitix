@@ -1,94 +1,84 @@
-import { initMesures } from './js/mesures.js';
-import { initDevises } from './js/devises.js';
-import { initCalcul } from './js/calcul.js';
-import { initNotes } from './js/notes.js'; // <--- AJOUTÉ
+import { initCalculator } from './calcul.js';
+import { initUnits } from './mesures.js';
+import { initCurrency } from './devises.js';
+import { initNotes } from './notes.js';
 
+// Gestion du thème couleur
 function applyAccent(hex) {
     document.documentElement.style.setProperty('--primary', hex);
-    
+    // Version dim pour les fonds
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
+    document.documentElement.style.setProperty('--primary-dim', `rgba(${r}, ${g}, ${b}, 0.15)`);
     
-    document.documentElement.style.setProperty('--primary-rgb', `${r}, ${g}, ${b}`);
     localStorage.setItem('u-accent', hex);
-
+    
+    // Mise à jour visuelle des points
     document.querySelectorAll('.color-dot').forEach(dot => {
-        dot.classList.toggle('active', dot.dataset.color === hex);
+        if(dot.dataset.color === hex) dot.classList.add('active');
+        else dot.classList.remove('active');
     });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. DESIGN
+    // 1. Initialiser la couleur
     const savedAccent = localStorage.getItem('u-accent') || '#007AFF';
     applyAccent(savedAccent);
 
-    // 2. NAVIGATION
-    const buttons = document.querySelectorAll('.nav-btn');
-    buttons.forEach(btn => {
-        btn.onclick = () => {
-            const targetId = btn.dataset.target;
-            if (!targetId) return; // Sécurité pour le bouton réglages qui n'a pas de target
+    // 2. Initialiser les modules
+    initUnits();
+    initCurrency();
+    initCalculator();
+    initNotes();
 
-            const targetPanel = document.getElementById(targetId);
-            if (targetPanel) {
-                document.querySelectorAll('.nav-btn, .panel').forEach(el => el.classList.remove('active'));
-                btn.classList.add('active');
-                targetPanel.classList.add('active');
-                if (window.navigator.vibrate) window.navigator.vibrate(5);
-            }
-        };
+    // 3. Navigation Principale (Tab Bar)
+    const navBtns = document.querySelectorAll('.nav-btn:not(#settings-toggle)');
+    const panels = document.querySelectorAll('.panel');
+
+    navBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Retirer active partout
+            navBtns.forEach(b => b.classList.remove('active'));
+            panels.forEach(p => p.classList.remove('active'));
+
+            // Activer le bouton cliqué et son panneau
+            btn.classList.add('active');
+            const targetId = btn.dataset.target;
+            document.getElementById(targetId).classList.add('active');
+        });
     });
 
-    // 3. RÉGLAGES (Ouverture/Fermeture)
-    const settingsToggle = document.getElementById('settings-toggle');
+    // 4. Modal Réglages
+    const settingsBtn = document.getElementById('settings-toggle');
     const settingsPanel = document.getElementById('settings-panel');
     const closeSettings = document.getElementById('close-settings');
 
-    if (settingsToggle && settingsPanel) {
-        settingsToggle.onclick = () => settingsPanel.classList.remove('hidden');
-        closeSettings.onclick = () => settingsPanel.classList.add('hidden');
-    }
-
-    document.querySelectorAll('.color-dot').forEach(dot => {
-        dot.onclick = () => {
-            const newColor = dot.dataset.color;
-            if (newColor) applyAccent(newColor);
-        };
+    settingsBtn.addEventListener('click', () => {
+        settingsPanel.classList.remove('hidden');
     });
 
-    // 4. LANCEMENT DES MODULES
-    try {
-        initMesures();
-        initDevises();
-        initCalcul();
-        initNotes(); // <--- AJOUTÉ
-        console.log("Unitix : Chargement réussi.");
-    } catch (error) {
-        console.error("Erreur modules :", error);
-    }
+    closeSettings.addEventListener('click', () => {
+        settingsPanel.classList.add('hidden');
+    });
 
-    // 5. EFFET POP
-    document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', () => {
-            const group = input.parentElement;
-            if (group && group.classList.contains('input-group')) {
-                group.classList.remove('input-active');
-                void group.offsetWidth; 
-                group.classList.add('input-active');
-                setTimeout(() => group.classList.remove('input-active'), 200);
-            }
+    // Fermer si on clique en dehors de la carte
+    settingsPanel.addEventListener('click', (e) => {
+        if (e.target === settingsPanel) settingsPanel.classList.add('hidden');
+    });
+
+    // 5. Sélecteur de couleur
+    document.querySelectorAll('.color-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            applyAccent(dot.dataset.color);
         });
     });
-    
-    // 6. RESET DATA
-    const btnReset = document.getElementById('btn-reset');
-    if(btnReset) {
-        btnReset.onclick = () => {
-            if(confirm("Supprimer toutes les données et préférences ?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        };
-    }
+
+    // 6. Reset
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        if(confirm("Tout effacer ?")) {
+            localStorage.clear();
+            window.location.reload();
+        }
+    });
 });
