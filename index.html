@@ -21,169 +21,135 @@
                     <i class="ph ph-ruler"></i> <span>Mesures</span>
                 </button>
                 <button class="nav-btn" data-target="currency-panel">
-                    <i class="ph ph-currency-dollar"></i> <span>Devises</span>
+                    <i class="ph ph-currency-eur"></i> <span>Devises</span>
                 </button>
                 <button class="nav-btn" data-target="calc-panel">
-                    <i class="ph ph-calculator"></i> <span>Calculatrice</span>
+                    <i class="ph ph-calculator"></i> <span>Calcul</span>
                 </button>
-                <button class="nav-btn" data-target="notes-panel">
-                    <i class="ph ph-notepad"></i> <span>Notes</span>
+                <button class="nav-btn hidden" data-target="notes-panel" id="nav-notes">
+                    <i class="ph ph-note-pencil"></i> <span>Notes</span>
                 </button>
                 <div class="spacer"></div>
-                <button class="nav-btn" data-target="settings-panel">
+                <button class="nav-btn" id="settings-toggle">
                     <i class="ph ph-gear"></i> <span>Réglages</span>
                 </button>
             </div>
         </nav>
 
         <main class="content">
-            
             <section id="convert-panel" class="panel active">
-                <header>
-                    <h1>Mesures</h1>
-                    <select id="unit-category" class="clean-select">
-                        <option value="length">📏 Longueur</option>
-                        <option value="mass">⚖️ Poids</option>
-                        <option value="volume">💧 Volume</option>
-                        <option value="temperature">🌡️ Température</option>
-                        <option value="speed">🚀 Vitesse</option>
-                        <option value="data">💾 Données</option>
+                <header><h1>Mesures</h1></header>
+                <div class="converter-card">
+                    <select id="unit-category" class="cat-select">
+                        <option value="length">Longueur</option>
+                        <option value="mass">Poids</option>
+                        <option value="data">Stockage</option>
+                        <option value="temp">Température</option>
                     </select>
-                </header>
-
-                <div class="converter-wrapper">
-                    <div class="converter-card">
-                        <div class="input-row">
-                            <input type="text" id="unit-input" value="1" inputmode="decimal">
-                            <select id="unit-from" class="unit-select"></select>
-                        </div>
-                        
-                        <div class="swap-container">
-                            <button id="btn-swap-unit" class="swap-btn" title="Inverser">
-                                <i class="ph ph-arrows-down-up"></i>
-                            </button>
-                        </div>
-
-                        <div class="input-row result">
-                            <input type="text" id="unit-output" readonly>
-                            <select id="unit-to" class="unit-select"></select>
-                        </div>
+                    <div class="input-group">
+                        <input type="number" id="unit-input" placeholder="0">
+                        <select id="unit-from" class="unit-select"></select>
                     </div>
-
-                    <div class="history-section">
-                        <h3>Historique récent</h3>
-                        <ul id="unit-history" class="history-list"></ul>
+                    <div class="swap-row">
+                        <button id="btn-swap-unit" class="swap-btn"><i class="ph ph-arrows-down-up"></i></button>
+                    </div>
+                    <div class="input-group result">
+                        <input type="text" id="unit-output" readonly placeholder="Résultat">
+                        <select id="unit-to" class="unit-select"></select>
                     </div>
                 </div>
             </section>
 
             <section id="currency-panel" class="panel">
-                <header>
-                    <h1>Devises</h1>
-                    <div class="api-info">
-                        <span id="api-status-dot" class="status-dot"></span>
-                        <small id="api-details">Chargement...</small>
+                <header><h1>Devises</h1></header>
+                <div class="converter-card">
+                    <div class="api-status">
+                        <span class="dot" id="api-dot"></span> <span id="api-log">Chargement...</span>
                     </div>
-                </header>
-
-                <div class="converter-wrapper">
-                    <div class="converter-card">
-                        <div class="input-row">
-                            <input type="text" id="currency-input" value="1" inputmode="decimal">
-                            <select id="currency-from" class="unit-select"></select>
-                        </div>
-
-                        <div class="swap-container">
-                            <button id="btn-swap-currency" class="swap-btn" title="Inverser">
-                                <i class="ph ph-arrows-down-up"></i>
-                            </button>
-                        </div>
-
-                        <div class="input-row result">
-                            <input type="text" id="currency-output" readonly>
-                            <select id="currency-to" class="unit-select"></select>
-                        </div>
+                    <div class="input-group">
+                        <input type="number" id="currency-input" placeholder="0">
+                        <select id="currency-from" class="unit-select"></select>
                     </div>
-                     <div class="history-section">
-                        <h3>Derniers échanges</h3>
-                        <ul id="currency-history" class="history-list"></ul>
+                    <div class="swap-row">
+                        <button id="btn-swap-currency" class="swap-btn"><i class="ph ph-arrows-down-up"></i></button>
+                    </div>
+                    <div class="input-group result">
+                        <input type="text" id="currency-output" readonly placeholder="0.00">
+                        <select id="currency-to" class="unit-select"></select>
                     </div>
                 </div>
             </section>
 
             <section id="calc-panel" class="panel">
-                <div class="calculator-container">
-                    <div class="display">
-                        <div class="previous-operand" id="calc-prev"></div>
-                        <div class="current-operand" id="calc-current">0</div>
+                <header><h1>Calculatrice</h1></header>
+                <div class="calculator-card">
+                    <div class="calc-display">
+                        <div id="calc-prev" class="prev-op"></div>
+                        <div id="calc-curr" class="curr-op">0</div>
                     </div>
-                    <div class="keypad" id="calc-btns">
-                        </div>
+                    <div id="calc-btns" class="calc-grid"></div>
                 </div>
             </section>
 
             <section id="notes-panel" class="panel">
                 <header>
                     <h1>Bloc-notes</h1>
-                    <div class="note-controls">
-                        <span id="save-status">Synchronisé</span>
-                        <button id="download-note" class="icon-btn" title="Télécharger">
-                            <i class="ph ph-download-simple"></i>
-                        </button>
-                    </div>
+                    <button id="download-note" class="icon-btn"><i class="ph ph-download-simple"></i></button>
                 </header>
                 <div class="notes-wrapper">
-                    <textarea id="note-pad" placeholder="Écrivez vos pensées ici..."></textarea>
+                    <textarea id="note-pad" placeholder="Écrivez quelque chose..."></textarea>
+                    <div class="note-controls">
+                        <span id="save-status">Vierge</span>
+                    </div>
                 </div>
             </section>
 
-            <section id="settings-panel" class="panel">
-                <header><h1>Réglages</h1></header>
-                
-                <div class="settings-list">
-                    <div class="setting-group">
-                        <h2>Apparence</h2>
-                        
-                        <div class="setting-row">
-                            <div class="setting-label">
-                                <i class="ph ph-moon"></i>
-                                <span>Thème</span>
-                            </div>
+            <section id="settings-panel" class="settings-overlay hidden">
+                <div class="settings-card">
+                    <div class="settings-header">
+                        <h2>Réglages</h2>
+                        <button id="close-settings" class="icon-btn"><i class="ph ph-x"></i></button>
+                    </div>
+                    
+                    <div class="settings-content">
+                        <div class="setting-group">
+                            <h3>Apparence</h3>
                             <div class="segmented-control">
-                                <button class="seg-btn active" data-mode="auto">Auto</button>
-                                <button class="seg-btn" data-mode="light">Clair</button>
-                                <button class="seg-btn" data-mode="dark">Sombre</button>
+                                <button class="seg-btn" data-theme="light">Clair</button>
+                                <button class="seg-btn" data-theme="dark">Sombre</button>
+                                <button class="seg-btn" data-theme="auto">Auto</button>
                             </div>
                         </div>
 
-                        <div class="setting-row">
-                            <div class="setting-label">
-                                <i class="ph ph-palette"></i>
-                                <span>Couleur d'accent</span>
+                        <div class="setting-group">
+                            <h3>Fonctionnalités</h3>
+                            <div class="setting-row">
+                                <div class="setting-label">
+                                    <i class="ph ph-notebook"></i>
+                                    <span>Activer le Bloc-notes</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="toggle-notes">
+                                    <span class="slider"></span>
+                                </label>
                             </div>
+                        </div>
+
+                        <div class="setting-group">
+                            <h3>Accentuation</h3>
                             <div class="color-picker">
-                                <button class="color-dot" style="--c: #007AFF" data-color="#007AFF" aria-label="Bleu"></button>
-                                <button class="color-dot" style="--c: #FF2D55" data-color="#FF2D55" aria-label="Rose"></button>
-                                <button class="color-dot" style="--c: #AF52DE" data-color="#AF52DE" aria-label="Violet"></button>
-                                <button class="color-dot" style="--c: #34C759" data-color="#34C759" aria-label="Vert"></button>
-                                <button class="color-dot" style="--c: #FF9500" data-color="#FF9500" aria-label="Orange"></button>
+                                <button class="color-dot" data-color="#007AFF" style="background:#007AFF"></button>
+                                <button class="color-dot" data-color="#FF2D55" style="background:#FF2D55"></button>
+                                <button class="color-dot" data-color="#AF52DE" style="background:#AF52DE"></button>
+                                <button class="color-dot" data-color="#34C759" style="background:#34C759"></button>
+                                <button class="color-dot" data-color="#FF9500" style="background:#FF9500"></button>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="setting-group">
-                        <h2>Données</h2>
-                        <div class="setting-row" id="clear-data-row">
-                            <div class="setting-label">
-                                <i class="ph ph-trash"></i>
-                                <span>Effacer les données locales</span>
-                            </div>
-                            <button class="danger-btn" id="btn-reset">Réinitialiser</button>
-                        </div>
+                        <button id="btn-reset" class="danger-btn">Réinitialiser l'application</button>
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
     <script src="script.js"></script>
