@@ -3,217 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Unitix | Convertisseur & Calculatrice</title>
+    <title>Unitix</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body data-theme="auto">
-    <div class="app-layout">
+    <div class="app-container">
         
         <aside class="sidebar">
-            <div class="logo">
-                <i class="ph-fill ph-lightning"></i>
-                <span>Unitix</span>
+            <div class="sidebar-header">
+                <div class="brand">
+                    <i class="ph-fill ph-square-half"></i>
+                    <span>Unitix</span>
+                </div>
             </div>
-            <nav class="side-nav">
-                <button class="nav-btn active" data-target="convert-panel">
-                    <i class="ph ph-ruler"></i>
-                    <span>Mesures</span>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-target="panel-convert">
+                    <i class="ph ph-swatches"></i> 
+                    <span class="nav-label">Mesures</span>
                 </button>
-                <button class="nav-btn" data-target="currency-panel">
-                    <i class="ph ph-currency-dollar"></i>
-                    <span>Devises</span>
+                <button class="nav-item" data-target="panel-currency">
+                    <i class="ph ph-currency-dollar"></i> 
+                    <span class="nav-label">Devises</span>
                 </button>
-                <button class="nav-btn" data-target="calc-panel">
-                    <i class="ph ph-calculator"></i>
-                    <span>Calculatrice</span>
+                <button class="nav-item" data-target="panel-date">
+                    <i class="ph ph-calendar-blank"></i> 
+                    <span class="nav-label">Dates</span>
                 </button>
-                <button class="nav-btn" data-target="settings-panel">
-                    <i class="ph ph-gear"></i>
-                    <span>Paramètres</span>
+                <button class="nav-item" data-target="panel-calc">
+                    <i class="ph ph-calculator"></i> 
+                    <span class="nav-label">Calculatrice</span>
+                </button>
+                <button class="nav-item" data-target="panel-level">
+                    <i class="ph ph-compass-tool"></i> 
+                    <span class="nav-label">Niveau</span>
+                </button>
+                <button class="nav-item hidden" id="nav-notes" data-target="panel-notes">
+                    <i class="ph ph-note-pencil"></i> 
+                    <span class="nav-label">Notes</span>
+                </button>
+                <button class="nav-item" data-target="panel-settings">
+                    <i class="ph ph-sliders"></i> 
+                    <span class="nav-label">Réglages</span>
                 </button>
             </nav>
             <div class="sidebar-footer">
-                <p>Version 5.0.0</p>
-                <p>Sano Bld</p>
+                <p>Développé par Sano Bld</p>
+                <p>Version 6.0</p>
             </div>
         </aside>
 
-        <main class="main-content">
+        <main class="content">
             
-            <div id="convert-panel" class="panel active">
-                <div class="panel-header">
-                    <h2>Mesures</h2>
-                </div>
-                
-                <div class="segment-control">
-                    <div class="segment active" data-cat="length">Longueur</div>
-                    <div class="segment" data-cat="mass">Poids</div>
-                    <div class="segment" data-cat="volume">Volume</div>
-                    <div class="segment" data-cat="speed">Vitesse</div>
-                    <div class="segment" data-cat="pressure">Pression</div>
-                    <div class="segment" data-cat="energy">Énergie</div>
-                    <div class="segment" data-cat="temp">Température</div>
-                    <div class="segment" data-cat="data">Data</div>
-                    <div class="segment" data-cat="time">Temps</div>
-                </div>
-
-                <div class="card converter-card">
-                    <div class="input-row">
-                        <div class="input-wrapper">
-                            <input type="number" id="unit-input" placeholder="0" inputmode="decimal">
-                        </div>
-                        <div class="select-wrapper">
-                            <select id="unit-from"></select>
-                            <span class="select-arrow"><i class="ph ph-caret-down"></i></span>
-                        </div>
+            <section id="panel-convert" class="panel active">
+                <header class="section-header">
+                    <h1>Mesures</h1>
+                    <div class="tabs-scroll">
+                        <button class="tab-btn active" data-cat="length">Longueur</button>
+                        <button class="tab-btn" data-cat="mass">Poids / Masse</button>
+                        <button class="tab-btn" data-cat="volume">Volume</button>
+                        <button class="tab-btn" data-cat="temp">Température</button>
+                        <button class="tab-btn" data-cat="data">Données Numériques</button>
+                        <button class="tab-btn" data-cat="speed">Vitesse</button>
                     </div>
+                </header>
 
-                    <div class="swap-container">
-                        <button id="btn-swap-unit" class="swap-btn" title="Inverser">
+                <div class="card main-card">
+                    <div class="unit-group">
+                        <input type="number" id="input-value" placeholder="Valeur à convertir" inputmode="decimal">
+                        <select id="select-from"></select>
+                    </div>
+                    <div class="divider">
+                        <button id="btn-swap-unit" class="icon-btn">
                             <i class="ph ph-arrows-down-up"></i>
                         </button>
                     </div>
-
-                    <div class="input-row">
-                        <div class="input-wrapper">
-                            <input type="number" id="unit-output" readonly placeholder="0">
-                        </div>
-                        <div class="select-wrapper">
-                            <select id="unit-to"></select>
-                            <span class="select-arrow"><i class="ph ph-caret-down"></i></span>
-                        </div>
-                    </div>
-                    
-                    <div class="info-badge">
-                        <span id="formula-display">Sélectionnez des unités</span>
+                    <div class="unit-group">
+                        <input type="number" id="output-value" readonly placeholder="Résultat">
+                        <select id="select-to"></select>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="currency-panel" class="panel">
-                <div class="panel-header">
-                    <h2>Devises</h2>
-                    <span id="api-status" class="status-pill">Chargement...</span>
-                </div>
-                <div class="card converter-card">
-                    <div class="input-row">
-                        <div class="input-wrapper">
-                            <input type="number" id="currency-input" placeholder="0" inputmode="decimal">
-                        </div>
-                        <div class="select-wrapper">
-                            <select id="currency-from"></select>
-                            <span class="select-arrow"><i class="ph ph-caret-down"></i></span>
-                        </div>
+            <section id="panel-currency" class="panel">
+                <header class="section-header">
+                    <h1>Devises Mondiale</h1>
+                    <span id="api-status" class="status-badge">Initialisation...</span>
+                </header>
+                <div class="card main-card">
+                    <div class="unit-group">
+                        <input type="number" id="curr-input" placeholder="0.00" inputmode="decimal">
+                        <select id="curr-from"></select>
                     </div>
-
-                    <div class="swap-container">
-                        <button id="btn-swap-currency" class="swap-btn">
+                    <div class="divider">
+                        <button id="btn-swap-curr" class="icon-btn">
                             <i class="ph ph-arrows-down-up"></i>
                         </button>
                     </div>
-
-                    <div class="input-row">
-                        <div class="input-wrapper">
-                            <input type="number" id="currency-output" readonly placeholder="0">
-                        </div>
-                        <div class="select-wrapper">
-                            <select id="currency-to"></select>
-                            <span class="select-arrow"><i class="ph ph-caret-down"></i></span>
-                        </div>
+                    <div class="unit-group">
+                        <input type="number" id="curr-output" readonly placeholder="0.00">
+                        <select id="curr-to"></select>
+                    </div>
+                    <div id="currency-info-box">
+                        <p id="last-update" class="info-text">En attente des données...</p>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="calc-panel" class="panel">
-                <div class="panel-header">
-                    <h2>Calculatrice</h2>
-                    <button id="toggle-sci" class="btn-sci-toggle">Mode Scientifique</button>
+            <section id="panel-date" class="panel">
+                <header class="section-header">
+                    <h1>Calcul de Date</h1>
+                </header>
+                <div class="card main-card">
+                    <div class="input-block">
+                        <label class="field-label">Date Initiale</label>
+                        <input type="date" id="date-start" class="full-input">
+                    </div>
+                    <div class="input-block" style="margin-top:20px">
+                        <label class="field-label">Date Finale</label>
+                        <input type="date" id="date-end" class="full-input">
+                    </div>
+                    <div class="result-box" id="date-diff-output">
+                        Veuillez choisir deux dates pour calculer l'écart.
+                    </div>
                 </div>
-                <div class="calc-container card">
+            </section>
+
+            <section id="panel-calc" class="panel">
+                <header class="section-header">
+                    <h1>Calculatrice</h1>
+                    <button id="calc-mode-btn" class="sub-btn">Mode Scientifique</button>
+                </header>
+                <div class="calc-wrapper card">
                     <div class="calc-screen">
-                        <div id="calc-prev" class="calc-history"></div>
-                        <div id="calc-curr" class="calc-display">0</div>
+                        <div id="calc-history" class="history"></div>
+                        <div id="calc-main" class="main-val">0</div>
                     </div>
-                    <div id="calc-btns" class="calc-grid">
-                        </div>
+                    <div id="calc-grid" class="calc-grid"></div>
                 </div>
-            </div>
+            </section>
 
-            <div id="settings-panel" class="panel">
-                <div class="panel-header">
-                    <h2>Paramètres</h2>
+            <section id="panel-level" class="panel">
+                <header class="section-header">
+                    <h1>Niveau</h1>
+                </header>
+                <div class="card level-card">
+                    <div class="level-container">
+                        <div id="level-bubble" class="bubble"></div>
+                        <div class="center-cross"></div>
+                    </div>
+                    <div id="level-data" class="level-info">0°</div>
+                    <p class="hint">Posez votre téléphone sur une surface plane.</p>
+                    <button id="btn-calibrate" class="text-btn">Réinitialiser l'Inclinaison</button>
                 </div>
+            </section>
+
+            <section id="panel-notes" class="panel">
+                <header class="section-header">
+                    <h1>Notes Personnelles</h1>
+                </header>
+                <div class="card main-card notes-card">
+                    <textarea id="notes-area" placeholder="Commencez à rédiger vos notes ici... Elles seront enregistrées automatiquement."></textarea>
+                </div>
+            </section>
+
+            <section id="panel-settings" class="panel">
+                <header class="section-header">
+                    <h1>Réglages</h1>
+                </header>
+                
                 <div class="settings-stack">
-                    
-                    <div class="card settings-card">
-                        <div class="setting-group">
-                            <div class="setting-header">
-                                <i class="ph-fill ph-paint-brush-broad"></i>
-                                <h3>Apparence</h3>
-                            </div>
-                            
-                            <label class="setting-label">Thème de l'application</label>
-                            <div class="segment-control theme-segments">
-                                <div class="segment active" data-theme-val="auto">
-                                    <i class="ph ph-monitor"></i> Auto
-                                </div>
-                                <div class="segment" data-theme-val="light">
-                                    <i class="ph ph-sun"></i> Clair
-                                </div>
-                                <div class="segment" data-theme-val="dark">
-                                    <i class="ph ph-moon"></i> Sombre
-                                </div>
-                            </div>
-
-                            <label class="setting-label" style="margin-top: 20px;">Couleur d'accentuation</label>
-                            <div class="color-options">
-                                <div class="color-dot active" style="background:#007AFF" data-color="#007AFF"></div>
-                                <div class="color-dot" style="background:#FF2D55" data-color="#FF2D55"></div>
-                                <div class="color-dot" style="background:#34C759" data-color="#34C759"></div>
-                                <div class="color-dot" style="background:#FF9500" data-color="#FF9500"></div>
-                                <div class="color-dot" style="background:#5856D6" data-color="#5856D6"></div>
-                            </div>
+                    <div class="card setting-item">
+                        <div class="setting-text">
+                            <h3>Apparence du Système</h3>
+                            <p>Choisissez entre le mode clair, sombre ou automatique.</p>
+                        </div>
+                        <div class="theme-switch">
+                            <button data-theme-btn="light"><i class="ph ph-sun"></i></button>
+                            <button data-theme-btn="auto" class="active"><i class="ph ph-monitor"></i></button>
+                            <button data-theme-btn="dark"><i class="ph ph-moon"></i></button>
                         </div>
                     </div>
 
-                    <div class="card settings-card">
-                        <div class="setting-group">
-                            <div class="setting-header">
-                                <i class="ph-fill ph-info"></i>
-                                <h3>Informations</h3>
-                            </div>
-                            <div class="about-links">
-                                <a href="https://sanobld.github.io/Web/" target="_blank" class="link-btn">
-                                    <i class="ph ph-globe"></i> Portfolio
-                                </a>
-                                <a href="https://github.com/SanoBld/Unitix" target="_blank" class="link-btn">
-                                    <i class="ph ph-github-logo"></i> GitHub
-                                </a>
-                            </div>
+                    <div class="card setting-item">
+                        <div class="setting-text">
+                            <h3>Module Bloc-notes</h3>
+                            <p>Activer ou masquer l'onglet de rédaction de notes.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-notes">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="card setting-item">
+                        <div class="setting-text">
+                            <h3>Couleur d'Accentuation</h3>
+                            <p>Modifiez la couleur principale de l'interface.</p>
+                        </div>
+                        <div class="accent-list">
+                            <div class="dot active" style="background:#007AFF" data-color="#007AFF"></div>
+                            <div class="dot" style="background:#FF2D55" data-color="#FF2D55"></div>
+                            <div class="dot" style="background:#34C759" data-color="#34C759"></div>
+                            <div class="dot" style="background:#AF52DE" data-color="#AF52DE"></div>
+                            <div class="dot" style="background:#FF9500" data-color="#FF9500"></div>
                         </div>
                     </div>
 
-                    <button id="btn-reset" class="btn-danger">
-                        <i class="ph ph-trash"></i> Réinitialiser l'application
-                    </button>
+                    <button id="app-reset" class="danger-btn">Réinitialiser tous les Paramètres</button>
                 </div>
-            </div>
+            </section>
         </main>
 
         <nav class="mobile-nav">
-            <button class="nav-btn active" data-target="convert-panel">
-                <i class="ph ph-ruler"></i>
-            </button>
-            <button class="nav-btn" data-target="currency-panel">
-                <i class="ph ph-currency-dollar"></i>
-            </button>
-            <button class="nav-btn" data-target="calc-panel">
-                <i class="ph ph-calculator"></i>
-            </button>
-            <button class="nav-btn" data-target="settings-panel">
-                <i class="ph ph-gear"></i>
-            </button>
+            <div class="nav-container">
+                <button class="nav-item active" data-target="panel-convert">
+                    <i class="ph ph-swatches"></i>
+                </button>
+                <button class="nav-item" data-target="panel-currency">
+                    <i class="ph ph-currency-dollar"></i>
+                </button>
+                <button class="nav-item" data-target="panel-date">
+                    <i class="ph ph-calendar-blank"></i>
+                </button>
+                <button class="nav-item" data-target="panel-calc">
+                    <i class="ph ph-calculator"></i>
+                </button>
+                <button class="nav-item" data-target="panel-settings">
+                    <i class="ph ph-sliders"></i>
+                </button>
+            </div>
         </nav>
     </div>
 
