@@ -1,64 +1,212 @@
 :root {
-    --primary: #007AFF; --bg: #F5F5F7; --card: #FFFFFF; --text: #1d1d1f;
-    --sub: #86868b; --border: #e5e5ea; --input: #F2F2F7;
+    --primary: #007AFF;
+    --bg: #F5F5F7;
+    --card: #FFFFFF;
+    --text: #1d1d1f;
+    --border: #e5e5ea;
+    --input: #F2F2F7;
+    /* Valeur par défaut pour éviter que les boutons sci soient invisibles */
+    --primary-rgb: 0, 122, 255; 
 }
+
 [data-theme="dark"] {
-    --bg: #000000; --card: #1C1C1E; --text: #FFFFFF; --border: #38383A; --input: #2C2C2E;
+    --bg: #000000;
+    --card: #1C1C1E;
+    --text: #FFFFFF;
+    --border: #38383A;
+    --input: #2C2C2E;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Inter', sans-serif; 
+}
 
-.app-container { display: flex; height: 100vh; }
-.nav-bar { width: 250px; background: var(--card); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; }
-.logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
-.nav-items { display: flex; flex-direction: column; gap: 5px; flex: 1; }
-.nav-btn { display: flex; align-items: center; gap: 12px; padding: 12px; border: none; background: none; color: var(--sub); cursor: pointer; border-radius: 10px; font-weight: 500; }
-.nav-btn.active { background: var(--input); color: var(--primary); }
+body { 
+    background: var(--bg); 
+    color: var(--text); 
+    height: 100vh; 
+    overflow: hidden; 
+}
+
+/* --- LAYOUT APP --- */
+.app-container { 
+    display: flex; 
+    height: 100vh; 
+}
+
+.nav-bar { 
+    width: 260px; 
+    background: var(--card); 
+    border-right: 1px solid var(--border); 
+    padding: 30px 20px; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.nav-btn { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+    padding: 14px; 
+    border: none; 
+    background: none; 
+    color: #86868b; 
+    cursor: pointer; 
+    border-radius: 12px; 
+    font-weight: 600; 
+    transition: 0.2s;
+}
+
+.nav-btn.active { 
+    background: var(--input); 
+    color: var(--primary); 
+}
+
 .spacer { flex: 1; }
-.hidden { display: none !important; }
 
-.content { flex: 1; padding: 40px; overflow-y: auto; }
-.panel { display: none; max-width: 600px; margin: 0 auto; }
-.panel.active { display: block; animation: fadeIn 0.3s; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.content { 
+    flex: 1; 
+    padding: 40px; 
+    overflow-y: auto; 
+    display: flex; 
+    justify-content: center; 
+}
 
-.card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
-.cat-select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--input); color: var(--text); margin-bottom: 20px; font-weight: 600; }
-.input-stack { display: flex; flex-direction: column; gap: 10px; }
-.input-group { display: flex; background: var(--input); padding: 15px; border-radius: 15px; align-items: center; transition: 0.2s; border: 2px solid transparent; }
-.input-group input { flex: 1; border: none; background: none; font-size: 1.4rem; font-weight: 700; color: var(--text); outline: none; width: 50%; }
-.input-group select { border: none; background: none; color: var(--primary); font-weight: 700; cursor: pointer; }
-.result { border: 2px solid var(--primary); background: transparent; }
+.panel { 
+    display: none; 
+    width: 100%; 
+    max-width: 500px; 
+}
 
-/* Animation de saisie */
-@keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
-.input-active { animation: pop 0.15s ease; border-color: var(--primary); }
+.panel.active { 
+    display: block; 
+    animation: slideUp 0.3s ease-out; 
+}
 
-.swap-zone { display: flex; justify-content: center; height: 20px; align-items: center; }
-.swap-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--primary); cursor: pointer; z-index: 2; }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-.api-badge { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; background: var(--input); padding: 5px 12px; border-radius: 20px; }
-.api-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
-.api-badge.online .dot { background: #34C759; box-shadow: 0 0 8px #34C759; }
+/* --- CARTES ET INPUTS --- */
+.card {
+    background: var(--card);
+    padding: 25px;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
 
-/* Calc */
-.calc-screen { background: var(--input); padding: 20px; border-radius: 20px; text-align: right; margin-bottom: 15px; }
-#calc-curr { font-size: 2rem; font-weight: 700; }
-.calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.calc-grid button { aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 1.2rem; cursor: pointer; }
-.calc-grid button.op { background: var(--primary); color: white; border: none; }
+.input-group { 
+    display: flex; 
+    background: var(--input); 
+    padding: 20px; 
+    border-radius: 20px; 
+    border: 2px solid transparent; 
+    transition: 0.3s;
+}
 
-#note-pad { width: 100%; height: 60vh; border-radius: 20px; padding: 20px; border: 1px solid var(--border); background: var(--card); color: var(--text); outline: none; resize: none; }
+.input-group input { 
+    flex: 1; 
+    border: none; 
+    background: none; 
+    font-size: 1.5rem; 
+    font-weight: 700; 
+    color: var(--text); 
+    outline: none; 
+}
 
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: grid; place-items: center; z-index: 100; }
-.settings-card { background: var(--card); padding: 30px; border-radius: 24px; width: 320px; text-align: center; }
-.set-row { display: flex; justify-content: space-between; margin: 20px 0; font-weight: 600; }
+.input-active { 
+    animation: inputPop 0.2s ease-out; 
+    border-color: var(--primary) !important; 
+}
 
+@keyframes inputPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+/* --- BLOC-NOTES --- */
+#note-pad {
+    width: 100%;
+    min-height: 200px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    padding: 10px;
+}
+
+/* --- CALCULATRICE --- */
+.calc-display {
+    background: var(--input);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    text-align: right;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.calc-curr { font-size: 2rem; font-weight: 700; }
+.calc-prev { color: #86868b; font-size: 1rem; margin-bottom: 5px; }
+
+.calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.calc-grid button {
+    height: 60px;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    background: var(--input);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.calc-grid button.sci {
+    background: rgba(var(--primary-rgb, 0, 122, 255), 0.1);
+    color: var(--primary);
+    font-size: 0.9rem;
+}
+
+.calc-grid button.op {
+    background: var(--border);
+    color: var(--primary);
+}
+
+.calc-grid button.equal {
+    background: var(--primary);
+    color: white;
+    grid-column: span 2;
+}
+
+/* --- MOBILE --- */
 @media (max-width: 768px) {
-    .app-container { flex-direction: column; }
-    .nav-bar { width: 100%; position: fixed; bottom: 0; flex-direction: row; height: 70px; border-right: none; border-top: 1px solid var(--border); padding: 5px; }
-    .logo, .nav-btn span, .spacer { display: none; }
+    .nav-bar { 
+        width: 100%; 
+        position: fixed; 
+        bottom: 0; 
+        flex-direction: row; 
+        height: 80px; 
+        border-right: none; 
+        border-top: 1px solid var(--border); 
+        padding: 0 10px;
+    }
+    .logo, .nav-btn span { display: none; }
     .nav-btn { flex: 1; justify-content: center; }
-    .content { padding: 20px; padding-bottom: 90px; }
+    .content { padding: 20px 20px 100px 20px; }
 }
