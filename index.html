@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Unitix</title>
+    <title>Unitix | Convertisseur & Calculatrice</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-<body data-theme="light">
+<body data-theme="auto">
     <div class="app-layout">
         
         <aside class="sidebar">
@@ -34,7 +34,8 @@
                 </button>
             </nav>
             <div class="sidebar-footer">
-                <p>Version 4.0.0</p>
+                <p>Version 5.0.0</p>
+                <p>Sano Bld</p>
             </div>
         </aside>
 
@@ -52,35 +53,40 @@
                     <div class="segment" data-cat="speed">Vitesse</div>
                     <div class="segment" data-cat="pressure">Pression</div>
                     <div class="segment" data-cat="energy">Énergie</div>
-                    <div class="segment" data-cat="power">Puissance</div>
                     <div class="segment" data-cat="temp">Température</div>
-                    <div class="segment" data-cat="data">Informatique</div>
+                    <div class="segment" data-cat="data">Data</div>
                     <div class="segment" data-cat="time">Temps</div>
                 </div>
 
                 <div class="card converter-card">
-                    <div class="input-group">
-                        <div class="val-box">
+                    <div class="input-row">
+                        <div class="input-wrapper">
                             <input type="number" id="unit-input" placeholder="0" inputmode="decimal">
-                            <span id="sym-from" class="unit-badge">-</span>
                         </div>
-                        <select id="unit-from">
-                            </select>
+                        <div class="select-wrapper">
+                            <select id="unit-from"></select>
+                            <span class="select-arrow"><i class="ph ph-caret-down"></i></span>
+                        </div>
                     </div>
 
                     <div class="swap-container">
-                        <button id="btn-swap-unit" class="swap-btn">
+                        <button id="btn-swap-unit" class="swap-btn" title="Inverser">
                             <i class="ph ph-arrows-down-up"></i>
                         </button>
                     </div>
 
-                    <div class="input-group">
-                        <div class="val-box">
+                    <div class="input-row">
+                        <div class="input-wrapper">
                             <input type="number" id="unit-output" readonly placeholder="0">
-                            <span id="sym-to" class="unit-badge">-</span>
                         </div>
-                        <select id="unit-to">
-                            </select>
+                        <div class="select-wrapper">
+                            <select id="unit-to"></select>
+                            <span class="select-arrow"><i class="ph ph-caret-down"></i></span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-badge">
+                        <span id="formula-display">Sélectionnez des unités</span>
                     </div>
                 </div>
             </div>
@@ -88,27 +94,33 @@
             <div id="currency-panel" class="panel">
                 <div class="panel-header">
                     <h2>Devises</h2>
-                    <span id="api-status" class="api-status">Initialisation...</span>
+                    <span id="api-status" class="status-pill">Chargement...</span>
                 </div>
                 <div class="card converter-card">
-                    <div class="input-group">
-                        <div class="val-box">
+                    <div class="input-row">
+                        <div class="input-wrapper">
                             <input type="number" id="currency-input" placeholder="0" inputmode="decimal">
-                            <span id="sym-curr-from" class="unit-badge">€</span>
                         </div>
-                        <select id="currency-from"></select>
+                        <div class="select-wrapper">
+                            <select id="currency-from"></select>
+                            <span class="select-arrow"><i class="ph ph-caret-down"></i></span>
+                        </div>
                     </div>
+
                     <div class="swap-container">
                         <button id="btn-swap-currency" class="swap-btn">
                             <i class="ph ph-arrows-down-up"></i>
                         </button>
                     </div>
-                    <div class="input-group">
-                        <div class="val-box">
+
+                    <div class="input-row">
+                        <div class="input-wrapper">
                             <input type="number" id="currency-output" readonly placeholder="0">
-                            <span id="sym-curr-to" class="unit-badge">$</span>
                         </div>
-                        <select id="currency-to"></select>
+                        <div class="select-wrapper">
+                            <select id="currency-to"></select>
+                            <span class="select-arrow"><i class="ph ph-caret-down"></i></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -116,6 +128,7 @@
             <div id="calc-panel" class="panel">
                 <div class="panel-header">
                     <h2>Calculatrice</h2>
+                    <button id="toggle-sci" class="btn-sci-toggle">Mode Scientifique</button>
                 </div>
                 <div class="calc-container card">
                     <div class="calc-screen">
@@ -131,48 +144,53 @@
                 <div class="panel-header">
                     <h2>Paramètres</h2>
                 </div>
-                
                 <div class="settings-stack">
-                    <div class="card">
-                        <h3>Apparence</h3>
-                        <div class="setting-row">
-                            <div class="setting-label">
-                                <strong>Mode Sombre</strong>
-                                <p>Activer ou désactiver manuellement</p>
+                    
+                    <div class="card settings-card">
+                        <div class="setting-group">
+                            <div class="setting-header">
+                                <i class="ph-fill ph-paint-brush-broad"></i>
+                                <h3>Apparence</h3>
                             </div>
-                            <button id="theme-toggle" class="toggle-btn">
-                                <div class="toggle-circle"></div>
-                            </button>
-                        </div>
-                        
-                        <hr class="divider">
-                        
-                        <p class="label">Couleur de surlignage</p>
-                        <div class="color-options">
-                            <div class="color-dot" style="background:#007AFF" data-color="#007AFF"></div>
-                            <div class="color-dot" style="background:#FF2D55" data-color="#FF2D55"></div>
-                            <div class="color-dot" style="background:#34C759" data-color="#34C759"></div>
-                            <div class="color-dot" style="background:#FF9500" data-color="#FF9500"></div>
-                            <div class="color-dot" style="background:#5856D6" data-color="#5856D6"></div>
+                            
+                            <label class="setting-label">Thème de l'application</label>
+                            <div class="segment-control theme-segments">
+                                <div class="segment active" data-theme-val="auto">
+                                    <i class="ph ph-monitor"></i> Auto
+                                </div>
+                                <div class="segment" data-theme-val="light">
+                                    <i class="ph ph-sun"></i> Clair
+                                </div>
+                                <div class="segment" data-theme-val="dark">
+                                    <i class="ph ph-moon"></i> Sombre
+                                </div>
+                            </div>
+
+                            <label class="setting-label" style="margin-top: 20px;">Couleur d'accentuation</label>
+                            <div class="color-options">
+                                <div class="color-dot active" style="background:#007AFF" data-color="#007AFF"></div>
+                                <div class="color-dot" style="background:#FF2D55" data-color="#FF2D55"></div>
+                                <div class="color-dot" style="background:#34C759" data-color="#34C759"></div>
+                                <div class="color-dot" style="background:#FF9500" data-color="#FF9500"></div>
+                                <div class="color-dot" style="background:#5856D6" data-color="#5856D6"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <h3>Bloc-notes rapide</h3>
-                        <textarea id="note-pad" placeholder="Vos notes sont sauvegardées automatiquement..."></textarea>
-                    </div>
-
-                    <div class="card about-section">
-                        <h3>À propos de Unitix</h3>
-                        <p>Unitix est un outil de conversion polyvalent conçu pour être rapide et intuitif.</p>
-                        <p class="author-info">Développé avec passion par <strong>Sano Bld</strong></p>
-                        <div class="about-links">
-                            <a href="https://sanobld.github.io/Web/" target="_blank" class="about-link">
-                                <i class="ph ph-globe"></i> Portfolio
-                            </a>
-                            <a href="https://github.com/SanoBld/Unitix" target="_blank" class="about-link">
-                                <i class="ph ph-github-logo"></i> GitHub
-                            </a>
+                    <div class="card settings-card">
+                        <div class="setting-group">
+                            <div class="setting-header">
+                                <i class="ph-fill ph-info"></i>
+                                <h3>Informations</h3>
+                            </div>
+                            <div class="about-links">
+                                <a href="https://sanobld.github.io/Web/" target="_blank" class="link-btn">
+                                    <i class="ph ph-globe"></i> Portfolio
+                                </a>
+                                <a href="https://github.com/SanoBld/Unitix" target="_blank" class="link-btn">
+                                    <i class="ph ph-github-logo"></i> GitHub
+                                </a>
+                            </div>
                         </div>
                     </div>
 

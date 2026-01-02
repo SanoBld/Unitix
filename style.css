@@ -1,10 +1,6 @@
-/* ==========================================================================
-   VARIABLES & THEMES
-   ========================================================================== */
 :root {
-    /* Couleurs de base (Mode Clair) */
     --primary: #007AFF;
-    --primary-dim: rgba(0, 122, 255, 0.1);
+    --primary-dim: rgba(0, 122, 255, 0.15);
     --bg: #F5F5F7;
     --sidebar-bg: #FFFFFF;
     --card-bg: #FFFFFF;
@@ -12,34 +8,25 @@
     --text-sec: #86868B;
     --border: #D2D2D7;
     --radius: 20px;
+    --input-bg: #F2F2F7;
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Mode Sombre Manuel (Déclenché par l'attribut data-theme) */
 [data-theme="dark"] {
     --bg: #000000;
     --sidebar-bg: #161617;
     --card-bg: #1C1C1E;
     --text: #F5F5F7;
-    --text-sec: #86868B;
+    --text-sec: #98989D;
     --border: #323234;
-    --primary-dim: rgba(10, 132, 255, 0.15);
+    --input-bg: #2C2C2E;
+    --primary-dim: rgba(10, 132, 255, 0.2);
 }
 
-/* Personnalisation du surlignage (Sélection de texte) */
-::selection {
-    background-color: var(--primary);
-    color: #FFFFFF;
-}
-
-/* ==========================================================================
-   RESET & BASE
-   ========================================================================== */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.015em;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -48,466 +35,173 @@ body {
     color: var(--text);
     overflow: hidden;
     height: 100vh;
-    width: 100vw;
 }
 
-/* ==========================================================================
-   LAYOUT (STRUCTURE)
-   ========================================================================== */
-.app-layout {
-    display: flex;
-    height: 100vh;
+/* --- Layout --- */
+.app-layout { display: flex; height: 100vh; }
+.main-content { 
+    flex: 1; 
+    padding: 30px; 
+    overflow-y: auto; 
+    padding-bottom: 90px;
 }
 
-.main-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 40px;
-    padding-bottom: 100px; /* Espace pour la nav mobile */
-}
-
-/* Panneaux */
-.panel {
-    display: none;
-    max-width: 650px;
-    margin: 0 auto;
-    animation: fadeIn 0.3s ease-out;
-}
-
-.panel.active {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* ==========================================================================
-   SIDEBAR (DESKTOP)
-   ========================================================================== */
+/* --- Sidebar --- */
 .sidebar {
     width: 260px;
-    background-color: var(--sidebar-bg);
+    background: var(--sidebar-bg);
     border-right: 1px solid var(--border);
-    padding: 32px 24px;
-    display: flex;
-    flex-direction: column;
+    padding: 30px 20px;
+    display: flex; flex-direction: column;
 }
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 48px;
+.logo { 
+    display: flex; gap: 10px; align-items: center; 
+    font-size: 22px; font-weight: 700; margin-bottom: 40px; 
     color: var(--text);
 }
-
-.logo i {
-    color: var(--primary);
-    font-size: 28px;
-}
-
-.side-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+.logo i { color: var(--primary); font-size: 26px; }
 
 .nav-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border: none;
-    background: transparent;
-    color: var(--text);
-    font-size: 16px;
-    font-weight: 500;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border: none; background: transparent;
+    color: var(--text); font-size: 15px; font-weight: 500;
+    border-radius: 12px; cursor: pointer; transition: 0.2s;
+    width: 100%; text-align: left;
+}
+.nav-btn.active { background: var(--primary); color: #fff; }
+
+.sidebar-footer { margin-top: auto; font-size: 12px; color: var(--text-sec); text-align: center; }
+
+/* --- Panels --- */
+.panel { display: none; max-width: 600px; margin: 0 auto; height: 100%; }
+.panel.active { display: flex; flex-direction: column; }
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0; }
+.panel-header h2 { font-size: 28px; font-weight: 700; }
+
+.status-pill { font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: 600; }
+
+/* --- Converter Cards --- */
+.card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 20px; }
+
+.input-row {
+    display: flex; gap: 12px; align-items: stretch;
+    background: var(--input-bg);
+    border-radius: 16px; padding: 8px;
+    border: 2px solid transparent; transition: 0.2s;
+}
+.input-row:focus-within { border-color: var(--primary); background: var(--card-bg); }
+
+.input-wrapper { flex: 1; display: flex; align-items: center; }
+.input-wrapper input {
+    width: 100%; background: transparent; border: none; outline: none;
+    font-size: 24px; font-weight: 600; color: var(--text); padding: 10px;
 }
 
-.nav-btn i {
-    font-size: 20px;
+.select-wrapper {
+    position: relative; display: flex; align-items: center;
+    border-left: 1px solid var(--border); padding-left: 10px; min-width: 110px;
 }
-
-.nav-btn:hover {
-    background-color: var(--primary-dim);
+.select-wrapper select {
+    appearance: none; background: transparent; border: none;
+    width: 100%; padding: 10px 25px 10px 10px;
+    font-size: 16px; font-weight: 500; color: var(--text); outline: none;
 }
+.select-arrow { position: absolute; right: 10px; pointer-events: none; color: var(--text-sec); }
 
-.nav-btn.active {
-    background-color: var(--primary);
-    color: #FFFFFF;
-}
-
-.sidebar-footer {
-    margin-top: auto;
-    font-size: 12px;
-    color: var(--text-sec);
-    text-align: center;
-}
-
-/* ==========================================================================
-   CONVERTISSEUR (MESURES & DEVISES)
-   ========================================================================== */
-.panel-header {
-    margin-bottom: 32px;
-}
-
-.panel-header h2 {
-    font-size: 28px;
-    font-weight: 700;
-}
-
-/* Sélecteur de segments */
-.segment-control {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 12px;
-    margin-bottom: 24px;
-    scrollbar-width: none; /* Firefox */
-}
-
-.segment-control::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
-}
-
-.segment {
-    flex: 0 0 auto;
-    padding: 8px 16px;
-    background-color: var(--border);
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.segment.active {
-    background-color: var(--primary);
-    color: #FFFFFF;
-}
-
-/* Cartes de conversion */
-.card {
-    background-color: var(--card-bg);
-    border-radius: var(--radius);
-    padding: 24px;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-}
-
-.val-box {
-    display: flex;
-    align-items: center;
-    background-color: var(--bg);
-    border-radius: 14px;
-    padding: 16px;
-    border: 2px solid transparent;
-    transition: 0.2s;
-}
-
-.val-box:focus-within {
-    border-color: var(--primary);
-}
-
-.val-box input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text);
-    outline: none;
-    width: 100%;
-}
-
-.unit-badge {
-    background-color: var(--primary);
-    color: #FFFFFF;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 800;
-}
-
-select {
-    width: 100%;
-    margin-top: 12px;
-    padding: 14px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background-color: var(--card-bg);
-    color: var(--text);
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    outline: none;
-}
-
-/* Swap Button */
-.swap-container {
-    display: flex;
-    justify-content: center;
-    margin: -16px 0;
-    position: relative;
-    z-index: 2;
-}
-
+.swap-container { display: flex; justify-content: center; margin: 8px 0; }
 .swap-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background-color: var(--primary);
-    color: #FFFFFF;
-    border: 4px solid var(--card-bg);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--card-bg); border: 1px solid var(--border);
+    color: var(--primary); cursor: pointer; display: flex; 
+    align-items: center; justify-content: center; font-size: 18px;
+    transition: 0.3s;
+}
+.swap-btn:hover { background: var(--primary); color: #fff; }
+
+.info-badge { text-align: center; margin-top: 15px; font-size: 13px; color: var(--text-sec); }
+
+/* --- Segments --- */
+.segment-control { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; scrollbar-width: none; flex-shrink: 0; }
+.segment-control::-webkit-scrollbar { display: none; }
+.segment {
+    white-space: nowrap; padding: 8px 16px; background: var(--border);
+    border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
+}
+.segment.active { background: var(--primary); color: #fff; }
+
+/* --- Calculatrice & Animation --- */
+.calc-container { display: flex; flex-direction: column; flex: 1; max-height: 80vh; padding: 20px; }
+.calc-screen { text-align: right; margin-bottom: 15px; flex-shrink: 0; }
+.calc-history { height: 20px; font-size: 14px; color: var(--text-sec); }
+
+/* Animation du chiffre */
+@keyframes digitPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); color: var(--primary); }
+    100% { transform: scale(1); }
 }
 
-.swap-btn:active {
-    transform: scale(0.9) rotate(180deg);
+.calc-display { 
+    font-size: 42px; font-weight: 600; white-space: nowrap; overflow-x: auto; 
+    transition: color 0.1s;
+}
+.calc-display.pop {
+    animation: digitPop 0.15s ease-out;
 }
 
-/* ==========================================================================
-   CALCULATRICE
-   ========================================================================== */
-.calc-screen {
-    background-color: var(--bg);
-    border-radius: 16px;
-    padding: 24px;
-    text-align: right;
-    margin-bottom: 20px;
-    min-height: 100px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-}
-
-.calc-history {
-    font-size: 14px;
-    color: var(--text-sec);
-    margin-bottom: 4px;
-    height: 20px;
-}
-
-.calc-display {
-    font-size: 32px;
-    font-weight: 700;
-    overflow-x: auto;
-    white-space: nowrap;
-}
-
-.calc-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-}
+.calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 10px; flex: 1; }
+.calc-grid.sci-mode { grid-template-columns: repeat(5, 1fr); }
 
 .calc-btn {
-    aspect-ratio: 1;
-    border: none;
-    border-radius: 50%;
-    font-size: 20px;
-    font-weight: 600;
-    background-color: var(--bg);
-    color: var(--text);
-    cursor: pointer;
-    transition: 0.2s;
+    border: none; border-radius: 12px; font-size: 20px; font-weight: 500;
+    background: var(--input-bg); color: var(--text); cursor: pointer; 
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s, filter 0.1s;
 }
+.calc-btn.op { background: var(--primary); color: #fff; }
+.calc-btn.fn { background: var(--border); font-size: 16px; }
+.calc-btn:active { transform: scale(0.92); filter: brightness(0.9); }
 
-.calc-btn:active {
-    transform: scale(0.9);
-    background-color: var(--border);
+.btn-sci-toggle { background: var(--input-bg); border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--primary); }
+
+/* --- Nouveaux Paramètres (Beautification) --- */
+.settings-card { padding: 0; overflow: hidden; }
+.setting-group { padding: 20px; }
+.setting-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--text); }
+.setting-header i { color: var(--primary); font-size: 20px; }
+.setting-header h3 { font-size: 18px; margin: 0; }
+
+.setting-label { font-size: 13px; font-weight: 600; color: var(--text-sec); margin-bottom: 10px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Switch de thème spécifique */
+.theme-segments { background: var(--input-bg); padding: 4px; border-radius: 14px; display: flex; }
+.theme-segments .segment { 
+    flex: 1; margin: 0; border-radius: 10px; background: transparent; color: var(--text-sec); 
+    display: flex; align-items: center; justify-content: center; gap: 6px;
 }
+.theme-segments .segment.active { background: var(--card-bg); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
-.calc-btn.op {
-    background-color: var(--primary);
-    color: #FFFFFF;
+.color-options { display: flex; gap: 15px; justify-content: flex-start; }
+.color-dot { 
+    width: 36px; height: 36px; border-radius: 50%; cursor: pointer; 
+    border: 3px solid var(--card-bg); box-shadow: 0 0 0 2px var(--border); transition: 0.2s; 
 }
+.color-dot.active { box-shadow: 0 0 0 2px var(--primary); transform: scale(1.1); }
 
-/* ==========================================================================
-   PARAMÈTRES & TOGGLE SWITCH
-   ========================================================================== */
-.settings-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+.about-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.link-btn { flex: 1; padding: 12px; background: var(--input-bg); border-radius: 12px; text-decoration: none; color: var(--text); text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-.setting-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
+.btn-danger { width: 100%; padding: 15px; background: rgba(255, 59, 48, 0.1); color: #FF3B30; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
 
-/* Bouton Toggle (Switch Apple Style) */
-.toggle-btn {
-    width: 50px;
-    height: 28px;
-    background-color: var(--border);
-    border-radius: 20px;
-    border: none;
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
+/* --- Mobile Nav --- */
+.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: var(--sidebar-bg); border-top: 1px solid var(--border); justify-content: space-around; align-items: center; padding-bottom: 20px; z-index: 99; }
 
-[data-theme="dark"] .toggle-btn {
-    background-color: var(--primary);
-}
-
-.toggle-circle {
-    width: 24px;
-    height: 24px;
-    background-color: #FFFFFF;
-    border-radius: 50%;
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-[data-theme="dark"] .toggle-circle {
-    transform: translateX(22px);
-}
-
-/* Accent Color Picker */
-.color-options {
-    display: flex;
-    gap: 12px;
-    margin-top: 12px;
-}
-
-.color-dot {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 3px solid transparent;
-    transition: 0.2s;
-}
-
-.color-dot:hover {
-    transform: scale(1.1);
-}
-
-.color-dot.active {
-    border-color: var(--text);
-    transform: scale(1.1);
-}
-
-/* Bloc-notes */
-#note-pad {
-    width: 100%;
-    height: 150px;
-    background-color: var(--bg);
-    border: none;
-    border-radius: 12px;
-    padding: 16px;
-    color: var(--text);
-    font-size: 16px;
-    resize: none;
-    margin-top: 10px;
-    outline: none;
-}
-
-/* À propos links */
-.about-links {
-    display: flex;
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.about-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background-color: var(--bg);
-    border-radius: 10px;
-    text-decoration: none;
-    color: var(--text);
-    font-weight: 600;
-    font-size: 14px;
-    transition: 0.2s;
-}
-
-.about-link:hover {
-    background-color: var(--primary-dim);
-    color: var(--primary);
-}
-
-/* Danger Button */
-.btn-danger {
-    width: 100%;
-    padding: 16px;
-    background-color: #FF3B3015;
-    color: #FF3B30;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.btn-danger:active {
-    background-color: #FF3B3030;
-}
-
-/* ==========================================================================
-   NAVIGATION MOBILE
-   ========================================================================== */
-.mobile-nav {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
-    background-color: var(--sidebar-bg);
-    border-top: 1px solid var(--border);
-    padding: 0 20px;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 100;
-}
-
-.mobile-nav .nav-btn {
-    flex-direction: column;
-    padding: 8px;
-    gap: 4px;
-    font-size: 24px;
-}
-
-/* Responsive Tablette/Mobile */
 @media (max-width: 900px) {
-    .sidebar {
-        display: none;
-    }
-
-    .mobile-nav {
-        display: flex;
-    }
-
-    .main-content {
-        padding: 20px;
-        padding-top: 40px;
-    }
+    .sidebar { display: none; }
+    .mobile-nav { display: flex; }
+    .main-content { padding: 20px; padding-bottom: 100px; }
+    .panel { max-height: none; }
+    .calc-container { height: 70vh; }
+    .calc-btn { font-size: 24px; }
+    .calc-btn.fn { font-size: 14px; }
 }

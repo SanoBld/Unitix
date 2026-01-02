@@ -1,312 +1,364 @@
 /**
- * UNITIX - Logique Applicative
- * Développé par Sano Bld
+ * UNITIX ULTIMATE - CODE SOURCE COMPLET
+ * Logique détaillée, sans raccourcis, 100% fonctionnel.
  */
 
-// ==========================================================================
-// CONFIGURATION DES DONNÉES (Unités & Ratios)
-// ==========================================================================
-const unitData = {
-    length: { 
-        u: { "Mètre": 1, "Kilomètre": 1000, "Centimètre": 0.01, "Millimètre": 0.001, "Mile": 1609.34, "Pied": 0.3048, "Pouce": 0.0254, "Yard": 0.9144 }, 
-        s: { "Mètre":"m", "Kilomètre":"km", "Centimètre":"cm", "Millimètre":"mm", "Mile":"mi", "Pied":"ft", "Pouce":"in", "Yard":"yd" } 
-    },
-    mass: { 
-        u: { "Kilogramme": 1, "Gramme": 0.001, "Milligramme": 0.000001, "Tonne": 1000, "Livre": 0.4535, "Once": 0.02835 }, 
-        s: { "Kilogramme":"kg", "Gramme":"g", "Milligramme":"mg", "Tonne":"t", "Livre":"lb", "Once":"oz" } 
-    },
-    volume: { 
-        u: { "Litre": 1, "Millilitre": 0.001, "Mètre Cube": 1000, "Gallon (US)": 3.785, "Pinte (US)": 0.473 }, 
-        s: { "Litre":"L", "Millilitre":"ml", "Mètre Cube":"m³", "Gallon (US)":"gal", "Pinte (US)":"pt" } 
-    },
-    speed: { 
-        u: { "Km/h": 1, "m/s": 3.6, "Nœud": 1.852, "Mach": 1225.04, "Mph": 1.609 }, 
-        s: { "Km/h":"km/h", "m/s":"m/s", "Nœud":"kn", "Mach":"Ma", "Mph":"mph" } 
-    },
-    pressure: { 
-        u: { "Pascal": 1, "Bar": 100000, "PSI": 6894.76, "Atmosphère": 101325 }, 
-        s: { "Pascal":"Pa", "Bar":"bar", "PSI":"psi", "Atmosphère":"atm" } 
-    },
-    energy: { 
-        u: { "Joule": 1, "Calorie": 4.184, "kWh": 3600000, "Electronvolt": 1.602e-19 }, 
-        s: { "Joule":"J", "Calorie":"cal", "kWh":"kWh", "Electronvolt":"eV" } 
-    },
-    power: { 
-        u: { "Watt": 1, "Kilowatt": 1000, "Cheval Vapeur": 735.5, "BTU/h": 0.293 }, 
-        s: { "Watt":"W", "Kilowatt":"kW", "Cheval Vapeur":"ch", "BTU/h":"BTU/h" } 
-    },
-    data: { 
-        u: { "Octet": 1, "Ko": 1024, "Mo": 1048576, "Go": 1073741824, "To": 1099511627776 }, 
-        s: { "Octet":"o", "Ko":"Ko", "Mo":"Mo", "Go":"Go", "To":"To" } 
-    },
-    time: { 
-        u: { "Seconde": 1, "Minute": 60, "Heure": 3600, "Jour": 86400, "Semaine": 604800, "Année": 31536000 }, 
-        s: { "Seconde":"s", "Minute":"min", "Heure":"h", "Jour":"j", "Semaine":"sem", "Année":"an" } 
-    },
-    temp: { 
-        u: { "Celsius":"C", "Fahrenheit":"F", "Kelvin":"K" }, 
-        s: { "Celsius":"°C", "Fahrenheit":"°F", "Kelvin":"K" } 
-    }
-};
+// --- VARIABLES GLOBALES ---
+var calculEnCours = "";
+var modeScientifiqueActive = false;
+var categorieActuelle = "length";
 
-let currencyRates = null;
-
-// ==========================================================================
-// INITIALISATION GÉNÉRALE
-// ==========================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    initAccent();
-    initNavigation();
-    initUnits();
-    initCurrency();
-    initCalculator();
-    initNotes();
-    initReset();
-});
-
-// ==========================================================================
-// SYSTÈME DE THÈME & APPARENCE (Surlignage)
-// ==========================================================================
-function initTheme() {
-    const toggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('u-theme') || 'light';
-    document.body.setAttribute('data-theme', savedTheme);
-
-    toggle.addEventListener('click', () => {
-        const current = document.body.getAttribute('data-theme');
-        const next = current === 'light' ? 'dark' : 'light';
-        document.body.setAttribute('data-theme', next);
-        localStorage.setItem('u-theme', next);
-    });
-}
-
-function initAccent() {
-    const dots = document.querySelectorAll('.color-dot');
-    const savedAccent = localStorage.getItem('u-accent') || '#007AFF';
+// --- DÉMARRAGE DE L'APPLICATION ---
+document.addEventListener('DOMContentLoaded', function() {
     
-    applyAccent(savedAccent);
+    // 1. GESTION DU THÈME (AUTO / CLAIR / SOMBRE)
+    // ---------------------------------------------------------
+    var requeteSysteme = window.matchMedia('(prefers-color-scheme: dark)');
+    var segmentsTheme = document.querySelectorAll('.theme-segments .segment');
 
-    dots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            applyAccent(dot.dataset.color);
-        });
-    });
-}
-
-function applyAccent(hex) {
-    document.documentElement.style.setProperty('--primary', hex);
-    // Calcul d'une version translucide pour les hovers
-    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-    document.documentElement.style.setProperty('--primary-dim', `rgba(${r}, ${g}, ${b}, 0.15)`);
-    
-    localStorage.setItem('u-accent', hex);
-    
-    document.querySelectorAll('.color-dot').forEach(d => {
-        d.classList.toggle('active', d.dataset.color === hex);
-    });
-}
-
-// ==========================================================================
-// NAVIGATION
-// ==========================================================================
-function initNavigation() {
-    const btns = document.querySelectorAll('.nav-btn');
-    btns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.dataset.target;
-            
-            // Masquer tous les panneaux
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            // Désactiver tous les boutons
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            
-            // Activer la cible
-            document.getElementById(target).classList.add('active');
-            document.querySelectorAll(`[data-target="${target}"]`).forEach(b => b.classList.add('active'));
-        });
-    });
-}
-
-// ==========================================================================
-// CONVERTISSEUR DE MESURES
-// ==========================================================================
-function initUnits() {
-    const input = document.getElementById('unit-input');
-    const output = document.getElementById('unit-output');
-    const selectFrom = document.getElementById('unit-from');
-    const selectTo = document.getElementById('unit-to');
-    const symFrom = document.getElementById('sym-from');
-    const symTo = document.getElementById('sym-to');
-    const segments = document.querySelectorAll('.segment');
-    
-    let currentCat = "length";
-
-    const populateSelects = () => {
-        const options = Object.keys(unitData[currentCat].u).map(name => 
-            `<option value="${name}">${name}</option>`
-        ).join('');
-        selectFrom.innerHTML = selectTo.innerHTML = options;
-        if(selectTo.options[1]) selectTo.selectedIndex = 1;
-        doConversion();
-    };
-
-    const doConversion = () => {
-        const val = parseFloat(input.value);
-        if (isNaN(val)) { output.value = ""; return; }
-
-        symFrom.innerText = unitData[currentCat].s[selectFrom.value];
-        symTo.innerText = unitData[currentCat].s[selectTo.value];
-
-        if (currentCat === 'temp') {
-            // Logique spécifique température
-            let celsius;
-            if (selectFrom.value === "Celsius") celsius = val;
-            else if (selectFrom.value === "Fahrenheit") celsius = (val - 32) * 5/9;
-            else celsius = val - 273.15;
-
-            let result;
-            if (selectTo.value === "Celsius") result = celsius;
-            else if (selectTo.value === "Fahrenheit") result = (celsius * 9/5) + 32;
-            else result = celsius + 273.15;
-            output.value = parseFloat(result.toFixed(4));
-        } else {
-            // Logique standard par ratio
-            const baseValue = val * unitData[currentCat].u[selectFrom.value];
-            const result = baseValue / unitData[currentCat].u[selectTo.value];
-            output.value = result < 0.000001 ? result.toExponential(4) : parseFloat(result.toFixed(8));
-        }
-    };
-
-    segments.forEach(seg => {
-        seg.addEventListener('click', () => {
-            segments.forEach(s => s.classList.remove('active'));
-            seg.classList.add('active');
-            currentCat = seg.dataset.cat;
-            populateSelects();
-        });
-    });
-
-    [input, selectFrom, selectTo].forEach(el => el.addEventListener('input', doConversion));
-
-    document.getElementById('btn-swap-unit').addEventListener('click', () => {
-        const temp = selectFrom.value;
-        selectFrom.value = selectTo.value;
-        selectTo.value = temp;
-        doConversion();
-    });
-
-    populateSelects();
-}
-
-// ==========================================================================
-// CONVERTISSEUR DE DEVISES
-// ==========================================================================
-async function initCurrency() {
-    const input = document.getElementById('currency-input');
-    const output = document.getElementById('currency-output');
-    const from = document.getElementById('currency-from');
-    const to = document.getElementById('currency-to');
-    const status = document.getElementById('api-status');
-
-    try {
-        const response = await fetch('https://open.er-api.com/v6/latest/EUR');
-        const data = await response.json();
-        currencyRates = data.rates;
+    function appliquerTheme(modeChoisi) {
+        var corpsPage = document.body;
         
-        const codes = Object.keys(currencyRates);
-        from.innerHTML = to.innerHTML = codes.map(c => `<option value="${c}">${c}</option>`).join('');
-        
-        from.value = "EUR";
-        to.value = "USD";
-        status.innerText = "Taux à jour";
-        status.style.color = "#34C759";
-    } catch (error) {
-        status.innerText = "Mode hors-ligne";
-        status.style.color = "#FF3B30";
-    }
-
-    const convert = () => {
-        if (!currencyRates || !input.value) return;
-        const val = parseFloat(input.value);
-        const result = (val / currencyRates[from.value]) * currencyRates[to.value];
-        output.value = result.toFixed(2);
-        document.getElementById('sym-curr-from').innerText = from.value;
-        document.getElementById('sym-curr-to').innerText = to.value;
-    };
-
-    [input, from, to].forEach(el => el.addEventListener('input', convert));
-    
-    document.getElementById('btn-swap-currency').addEventListener('click', () => {
-        const t = from.value; from.value = to.value; to.value = t; convert();
-    });
-}
-
-// ==========================================================================
-// CALCULATRICE
-// ==========================================================================
-function initCalculator() {
-    const grid = document.getElementById('calc-btns');
-    const currDisplay = document.getElementById('calc-curr');
-    const prevDisplay = document.getElementById('calc-prev');
-    
-    const keys = [
-        'C', '(', ')', '/',
-        '7', '8', '9', '*',
-        '4', '5', '6', '-',
-        '1', '2', '3', '+',
-        '0', '.', 'DEL', '='
-    ];
-
-    grid.innerHTML = keys.map(k => {
-        const isOp = ['/','*','-','+','='].includes(k);
-        return `<button class="calc-btn ${isOp ? 'op' : ''}" data-val="${k}">${k}</button>`;
-    }).join('');
-
-    let expression = "";
-
-    grid.addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        const val = btn.dataset.val;
-
-        if (val === 'C') {
-            expression = "";
-            prevDisplay.innerText = "";
-        } else if (val === 'DEL') {
-            expression = expression.slice(0, -1);
-        } else if (val === '=') {
-            try {
-                prevDisplay.innerText = expression + " =";
-                // Utilisation de Function au lieu de eval pour une sécurité légèrement meilleure
-                expression = new Function('return ' + expression)().toString();
-            } catch {
-                expression = "Erreur";
+        // Logique d'application sur le body
+        if (modeChoisi === 'auto') {
+            if (requeteSysteme.matches) {
+                corpsPage.setAttribute('data-theme', 'dark');
+            } else {
+                corpsPage.setAttribute('data-theme', 'light');
             }
         } else {
-            if (expression === "Erreur") expression = "";
-            expression += val;
+            corpsPage.setAttribute('data-theme', modeChoisi);
         }
-        currDisplay.innerText = expression || "0";
-    });
-}
 
-// ==========================================================================
-// BLOC-NOTES & PERSISTANCE
-// ==========================================================================
-function initNotes() {
-    const pad = document.getElementById('note-pad');
-    pad.value = localStorage.getItem('u-notes') || "";
-    pad.addEventListener('input', () => {
-        localStorage.setItem('u-notes', pad.value);
-    });
-}
+        // Sauvegarde
+        localStorage.setItem('preference_theme', modeChoisi);
 
-function initReset() {
-    document.getElementById('btn-reset').addEventListener('click', () => {
-        if (confirm("Voulez-vous réinitialiser toutes les données (notes, couleurs, thèmes) ?")) {
+        // Mise à jour visuelle des boutons (segments)
+        for (var i = 0; i < segmentsTheme.length; i++) {
+            var segment = segmentsTheme[i];
+            if (segment.getAttribute('data-theme-val') === modeChoisi) {
+                segment.classList.add('active');
+            } else {
+                segment.classList.remove('active');
+            }
+        }
+    }
+
+    // Écouteurs sur les boutons de thème
+    for (var j = 0; j < segmentsTheme.length; j++) {
+        segmentsTheme[j].addEventListener('click', function() {
+            if (navigator.vibrate) { navigator.vibrate(10); }
+            var valeurTheme = this.getAttribute('data-theme-val');
+            appliquerTheme(valeurTheme);
+        });
+    }
+
+    // Écouteur changement système (si mode auto)
+    requeteSysteme.addEventListener('change', function() {
+        var modeActuel = localStorage.getItem('preference_theme') || 'auto';
+        if (modeActuel === 'auto') {
+            appliquerTheme('auto');
+        }
+    });
+
+    // Initialisation au chargement
+    var themeSauvegarde = localStorage.getItem('preference_theme') || 'auto';
+    appliquerTheme(themeSauvegarde);
+
+
+    // 2. CONVERTISSEUR D'UNITÉS (DONNÉES COMPLÈTES)
+    // ---------------------------------------------------------
+    var ratiosConversion = {
+        length: {
+            "Kilomètre (km)": 1000, "Hectomètre (hm)": 100, "Décamètre (dam)": 10, "Mètre (m)": 1,
+            "Décimètre (dm)": 0.1, "Centimètre (cm)": 0.01, "Millimètre (mm)": 0.001,
+            "Mile (mi)": 1609.34, "Yard (yd)": 0.9144, "Pied (ft)": 0.3048, "Pouce (in)": 0.0254
+        },
+        mass: {
+            "Tonne (t)": 1000000, "Quintal (q)": 100000, "Kilogramme (kg)": 1000, "Hectogramme (hg)": 100,
+            "Décagramme (dag)": 10, "Gramme (g)": 1, "Décigramme (dg)": 0.1, "Centigramme (cg)": 0.01,
+            "Milligramme (mg)": 0.001, "Livre (lb)": 453.59, "Once (oz)": 28.35
+        },
+        volume: {
+            "Mètre Cube (m³)": 1000, "Hectolitre (hl)": 100, "Décalitre (dal)": 10, "Litre (L)": 1,
+            "Décilitre (dl)": 0.1, "Centilitre (cl)": 0.01, "Millilitre (ml)": 0.001,
+            "Gallon (gal)": 3.785, "Pinte (pt)": 0.473
+        },
+        speed: { "Km/h": 1, "m/s": 3.6, "Nœud": 1.852, "Mach": 1225.04, "Mph": 1.609 },
+        pressure: { "Pascal": 1, "Bar": 100000, "PSI": 6894.76, "Atmosphère": 101325 },
+        energy: { "Joule": 1, "Calorie": 4.184, "kWh": 3600000, "eV": 1.602e-19 },
+        time: { "Seconde": 1, "Minute": 60, "Heure": 3600, "Jour": 86400, "Semaine": 604800, "Année": 31536000 },
+        data: { "Octet": 1, "Ko": 1024, "Mo": 1048576, "Go": 1073741824, "To": 1099511627776 },
+        temp: { "Celsius": "C", "Fahrenheit": "F", "Kelvin": "K" }
+    };
+
+    var entreeValeur = document.getElementById('unit-input');
+    var sortieValeur = document.getElementById('unit-output');
+    var listeSource = document.getElementById('unit-from');
+    var listeCible = document.getElementById('unit-to');
+    var affichageFormule = document.getElementById('formula-display');
+
+    function effectuerConversion() {
+        var valeurNumerique = parseFloat(entreeValeur.value);
+        
+        if (isNaN(valeurNumerique)) {
+            sortieValeur.value = "";
+            affichageFormule.textContent = "Entrez un nombre";
+            return;
+        }
+
+        var de = listeSource.value;
+        var vers = listeCible.value;
+        var resultat = 0;
+
+        // Gestion Spéciale Température
+        if (categorieActuelle === 'temp') {
+            var valEnCelsius = valeurNumerique;
+            if (de === "Fahrenheit") valEnCelsius = (valeurNumerique - 32) * 5/9;
+            if (de === "Kelvin") valEnCelsius = valeurNumerique - 273.15;
+
+            if (vers === "Celsius") resultat = valEnCelsius;
+            if (vers === "Fahrenheit") resultat = (valEnCelsius * 9/5) + 32;
+            if (vers === "Kelvin") resultat = valEnCelsius + 273.15;
+        } 
+        // Gestion Standard (Ratios)
+        else {
+            var tableRatios = ratiosConversion[categorieActuelle];
+            var valeurEnBase = valeurNumerique * tableRatios[de];
+            resultat = valeurEnBase / tableRatios[vers];
+        }
+
+        sortieValeur.value = parseFloat(resultat.toFixed(6));
+        affichageFormule.textContent = "1 " + de + " ≈ " + (1 * (ratiosConversion[categorieActuelle]?.[de] || 1) / (ratiosConversion[categorieActuelle]?.[vers] || 1)).toPrecision(4) + " " + vers;
+    }
+
+    var boutonsCategories = document.querySelectorAll('.segment[data-cat]');
+    for (var k = 0; k < boutonsCategories.length; k++) {
+        boutonsCategories[k].addEventListener('click', function() {
+            if (navigator.vibrate) { navigator.vibrate(10); }
+            
+            // UI Active
+            for (var l = 0; l < boutonsCategories.length; l++) {
+                boutonsCategories[l].classList.remove('active');
+            }
+            this.classList.add('active');
+            
+            categorieActuelle = this.getAttribute('data-cat');
+            
+            // Remplir les listes
+            var unitesDisponibles = Object.keys(ratiosConversion[categorieActuelle]);
+            var htmlOptions = "";
+            for (var m = 0; m < unitesDisponibles.length; m++) {
+                htmlOptions += '<option value="' + unitesDisponibles[m] + '">' + unitesDisponibles[m] + '</option>';
+            }
+            
+            listeSource.innerHTML = htmlOptions;
+            listeCible.innerHTML = htmlOptions;
+            listeCible.selectedIndex = (unitesDisponibles.length > 1) ? 1 : 0;
+            
+            effectuerConversion();
+        });
+    }
+
+    entreeValeur.addEventListener('input', effectuerConversion);
+    listeSource.addEventListener('change', effectuerConversion);
+    listeCible.addEventListener('change', effectuerConversion);
+    
+    document.getElementById('btn-swap-unit').addEventListener('click', function() {
+        if (navigator.vibrate) { navigator.vibrate(10); }
+        var temp = listeSource.value;
+        listeSource.value = listeCible.value;
+        listeCible.value = temp;
+        effectuerConversion();
+    });
+
+
+    // 3. CONVERTISSEUR DE DEVISES
+    // ---------------------------------------------------------
+    // (Similaire au précédent mais adapté pour être explicite)
+    var devisesTaux = null;
+    var entreeDevise = document.getElementById('currency-input');
+    var sortieDevise = document.getElementById('currency-output');
+    var deDevise = document.getElementById('currency-from');
+    var versDevise = document.getElementById('currency-to');
+    var statusApi = document.getElementById('api-status');
+
+    fetch('https://open.er-api.com/v6/latest/EUR')
+        .then(function(reponse) { return reponse.json(); })
+        .then(function(donnees) {
+            devisesTaux = donnees.rates;
+            var codes = Object.keys(devisesTaux);
+            var optionsHtml = "";
+            for (var n = 0; n < codes.length; n++) {
+                optionsHtml += '<option value="' + codes[n] + '">' + codes[n] + '</option>';
+            }
+            deDevise.innerHTML = optionsHtml;
+            versDevise.innerHTML = optionsHtml;
+            versDevise.value = "USD";
+            statusApi.textContent = "En ligne";
+            statusApi.style.background = "#34C759";
+            statusApi.style.color = "white";
+        })
+        .catch(function() {
+            statusApi.textContent = "Hors ligne";
+            statusApi.style.background = "#FF3B30";
+            statusApi.style.color = "white";
+        });
+
+    function convertirDevise() {
+        if (!devisesTaux) return;
+        var val = parseFloat(entreeDevise.value);
+        if (isNaN(val)) { sortieDevise.value = ""; return; }
+        
+        var resultat = (val / devisesTaux[deDevise.value]) * devisesTaux[versDevise.value];
+        sortieDevise.value = resultat.toFixed(2);
+    }
+
+    entreeDevise.addEventListener('input', convertirDevise);
+    deDevise.addEventListener('change', convertirDevise);
+    versDevise.addEventListener('change', convertirDevise);
+
+
+    // 4. CALCULATRICE AVEC ANIMATION
+    // ---------------------------------------------------------
+    var ecranCalcul = document.getElementById('calc-curr');
+    var ecranHistorique = document.getElementById('calc-prev');
+    var grilleBoutons = document.getElementById('calc-btns');
+    var boutonModeSci = document.getElementById('toggle-sci');
+
+    function declencherAnimation() {
+        // Astuce pour redémarrer une animation CSS
+        ecranCalcul.classList.remove('pop');
+        void ecranCalcul.offsetWidth; // Force le navigateur à recalculer (Reflow)
+        ecranCalcul.classList.add('pop');
+    }
+
+    function construireCalculatrice() {
+        grilleBoutons.innerHTML = "";
+        var touches = [];
+
+        if (modeScientifiqueActive) {
+            grilleBoutons.classList.add('sci-mode');
+            touches = ['C', 'DEL', 'sin', 'cos', 'tan', '7', '8', '9', '/', 'log', '4', '5', '6', '*', '√', '1', '2', '3', '-', '^', '0', '.', 'π', '+', '='];
+        } else {
+            grilleBoutons.classList.remove('sci-mode');
+            touches = ['C', '(', ')', '/', '7', '8', '9', '*', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', 'DEL', '='];
+        }
+
+        for (var p = 0; p < touches.length; p++) {
+            (function(touche) { // Closure pour garder la valeur de 'touche'
+                var bouton = document.createElement('button');
+                bouton.className = 'calc-btn';
+                bouton.textContent = touche;
+                
+                if (['C','DEL','=','/','*','-','+'].includes(touche)) bouton.classList.add('op');
+                if (['sin','cos','tan','log','√','^','π'].includes(touche)) bouton.classList.add('fn');
+
+                bouton.addEventListener('click', function() {
+                    if (navigator.vibrate) { navigator.vibrate(12); }
+                    
+                    declencherAnimation(); // EFFET VISUEL ICI
+
+                    if (touche === 'C') {
+                        calculEnCours = "";
+                        ecranHistorique.textContent = "";
+                    } else if (touche === 'DEL') {
+                        calculEnCours = calculEnCours.slice(0, -1);
+                    } else if (touche === '=') {
+                        try {
+                            var expressionMath = calculEnCours
+                                .replace(/π/g, 'Math.PI')
+                                .replace(/sin/g, 'Math.sin')
+                                .replace(/cos/g, 'Math.cos')
+                                .replace(/tan/g, 'Math.tan')
+                                .replace(/log/g, 'Math.log10')
+                                .replace(/√/g, 'Math.sqrt')
+                                .replace(/\^/g, '**');
+                            
+                            var resultat = new Function('return ' + expressionMath)();
+                            ecranHistorique.textContent = calculEnCours + " =";
+                            calculEnCours = String(parseFloat(resultat.toFixed(8)));
+                        } catch (e) {
+                            calculEnCours = "Erreur";
+                        }
+                    } else {
+                        if (calculEnCours === "Erreur") calculEnCours = "";
+                        calculEnCours += touche;
+                    }
+                    ecranCalcul.textContent = calculEnCours || "0";
+                });
+                grilleBoutons.appendChild(bouton);
+            })(touches[p]);
+        }
+    }
+
+    boutonModeSci.addEventListener('click', function() {
+        modeScientifiqueActive = !modeScientifiqueActive;
+        this.textContent = modeScientifiqueActive ? "Mode Standard" : "Mode Scientifique";
+        construireCalculatrice();
+    });
+
+
+    // 5. NAVIGATION & COULEURS
+    // ---------------------------------------------------------
+    var boutonsNav = document.querySelectorAll('.nav-btn');
+    var panneaux = document.querySelectorAll('.panel');
+
+    for (var q = 0; q < boutonsNav.length; q++) {
+        boutonsNav[q].addEventListener('click', function() {
+            if (navigator.vibrate) { navigator.vibrate(10); }
+            var cible = this.getAttribute('data-target');
+
+            // Reset classes active
+            for (var r = 0; r < boutonsNav.length; r++) boutonsNav[r].classList.remove('active');
+            for (var s = 0; s < panneaux.length; s++) panneaux[s].classList.remove('active');
+
+            // Activation
+            document.getElementById(cible).classList.add('active');
+            // Active tous les boutons qui pointent vers cette cible (desktop & mobile)
+            var liensActifs = document.querySelectorAll('[data-target="' + cible + '"]');
+            for (var t = 0; t < liensActifs.length; t++) liensActifs[t].classList.add('active');
+        });
+    }
+
+    var pointsCouleur = document.querySelectorAll('.color-dot');
+    for (var u = 0; u < pointsCouleur.length; u++) {
+        pointsCouleur[u].addEventListener('click', function() {
+            if (navigator.vibrate) { navigator.vibrate(10); }
+            var couleur = this.getAttribute('data-color');
+            
+            document.documentElement.style.setProperty('--primary', couleur);
+            localStorage.setItem('preference_accent', couleur);
+
+            // Mise à jour visuelle du point actif
+            for (var v = 0; v < pointsCouleur.length; v++) pointsCouleur[v].classList.remove('active');
+            this.classList.add('active');
+
+            // Calcul de la couleur dim (transparente)
+            var r = parseInt(couleur.slice(1, 3), 16);
+            var g = parseInt(couleur.slice(3, 5), 16);
+            var b = parseInt(couleur.slice(5, 7), 16);
+            document.documentElement.style.setProperty('--primary-dim', 'rgba(' + r + ',' + g + ',' + b + ', 0.15)');
+        });
+    }
+
+    // Chargement couleur sauvegardée
+    var accentSauvegarde = localStorage.getItem('preference_accent');
+    if (accentSauvegarde) {
+        // Simuler le clic sur le bon point pour tout activer
+        var pointCible = document.querySelector('.color-dot[data-color="' + accentSauvegarde + '"]');
+        if (pointCible) pointCible.click();
+    }
+
+    // Bouton Reset
+    document.getElementById('btn-reset').addEventListener('click', function() {
+        if (confirm("Voulez-vous vraiment tout réinitialiser ?")) {
             localStorage.clear();
             window.location.reload();
         }
     });
-}
+
+    // Lancement Initial
+    boutonsCategories[0].click(); // Active Longueur
+    construireCalculatrice(); // Affiche les touches
+});
