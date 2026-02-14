@@ -3,125 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Unitix</title>
+    <title>Unitix 7.0 - Power Edition</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body data-theme="auto">
     <div class="app-container">
         
+        <!-- SIDEBAR DESKTOP -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="brand">
                     <i class="ph-fill ph-square-half"></i>
                     <span>Unitix</span>
+                    <span class="version-badge">7.0</span>
                 </div>
             </div>
             <nav class="nav-menu">
-                <button class="nav-item active" data-target="panel-convert">
+                <button class="nav-item active" data-target="panel-convert" data-shortcut="1" aria-label="Ouvrir les conversions de mesures">
                     <i class="ph ph-swatches"></i> 
                     <span class="nav-label">Mesures</span>
+                    <kbd class="kbd">1</kbd>
                 </button>
-                <button class="nav-item" data-target="panel-currency">
+                <button class="nav-item" data-target="panel-currency" data-shortcut="2" aria-label="Ouvrir le convertisseur de devises">
                     <i class="ph ph-currency-dollar"></i> 
                     <span class="nav-label">Devises</span>
+                    <kbd class="kbd">2</kbd>
                 </button>
-                <button class="nav-item" data-target="panel-date">
+                <button class="nav-item" data-target="panel-date" data-shortcut="3" aria-label="Ouvrir le calculateur de dates">
                     <i class="ph ph-calendar-blank"></i> 
                     <span class="nav-label">Dates</span>
+                    <kbd class="kbd">3</kbd>
                 </button>
-                <button class="nav-item" data-target="panel-calc">
+                <button class="nav-item" data-target="panel-calc" data-shortcut="4" aria-label="Ouvrir la calculatrice">
                     <i class="ph ph-calculator"></i> 
                     <span class="nav-label">Calculatrice</span>
+                    <kbd class="kbd">4</kbd>
                 </button>
-                <button class="nav-item" data-target="panel-level">
+                <button class="nav-item" data-target="panel-tools" data-shortcut="5" aria-label="Ouvrir les outils rapides">
+                    <i class="ph ph-toolbox"></i> 
+                    <span class="nav-label">Outils Rapides</span>
+                    <kbd class="kbd">5</kbd>
+                </button>
+                <button class="nav-item" data-target="panel-level" data-shortcut="6" aria-label="Ouvrir le niveau à bulle">
                     <i class="ph ph-compass-tool"></i> 
                     <span class="nav-label">Niveau</span>
+                    <kbd class="kbd">6</kbd>
                 </button>
-                <button class="nav-item hidden" id="nav-notes" data-target="panel-notes">
+                <button class="nav-item hidden" id="nav-notes" data-target="panel-notes" data-shortcut="7" aria-label="Ouvrir les notes">
                     <i class="ph ph-note-pencil"></i> 
                     <span class="nav-label">Notes</span>
+                    <kbd class="kbd">7</kbd>
                 </button>
-                <button class="nav-item" data-target="panel-settings">
+                <button class="nav-item" data-target="panel-settings" data-shortcut="8" aria-label="Ouvrir les réglages">
                     <i class="ph ph-sliders"></i> 
                     <span class="nav-label">Réglages</span>
+                    <kbd class="kbd">8</kbd>
                 </button>
             </nav>
             <div class="sidebar-footer">
                 <p>Développé par Sano Bld</p>
-                <p>Version 6.0</p>
+                <p>Version 7.0 — Power Edition</p>
             </div>
         </aside>
 
+        <!-- CONTENU PRINCIPAL -->
         <main class="content">
             
+            <!-- PANNEAU MESURES -->
             <section id="panel-convert" class="panel active">
                 <header class="section-header">
-                    <h1>Mesures</h1>
+                    <div class="header-row">
+                        <h1>Mesures</h1>
+                        <div class="header-actions">
+                            <button id="btn-history-convert" class="icon-action-btn" title="Historique" aria-label="Afficher l'historique des conversions">
+                                <i class="ph ph-clock-counter-clockwise"></i>
+                            </button>
+                            <button id="btn-favorites-convert" class="icon-action-btn" title="Favoris" aria-label="Afficher les favoris">
+                                <i class="ph ph-star"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="tabs-scroll">
-                        <button class="tab-btn active" data-cat="length">Longueur</button>
-                        <button class="tab-btn" data-cat="mass">Poids / Masse</button>
-                        <button class="tab-btn" data-cat="volume">Volume</button>
-                        <button class="tab-btn" data-cat="temp">Température</button>
-                        <button class="tab-btn" data-cat="data">Données Numériques</button>
-                        <button class="tab-btn" data-cat="speed">Vitesse</button>
+                        <button class="tab-btn active" data-cat="length" aria-label="Convertir les longueurs">Longueur</button>
+                        <button class="tab-btn" data-cat="mass" aria-label="Convertir les poids">Poids / Masse</button>
+                        <button class="tab-btn" data-cat="volume" aria-label="Convertir les volumes">Volume</button>
+                        <button class="tab-btn" data-cat="temp" aria-label="Convertir les températures">Température</button>
+                        <button class="tab-btn" data-cat="data" aria-label="Convertir les données">Données Numériques</button>
+                        <button class="tab-btn" data-cat="speed" aria-label="Convertir les vitesses">Vitesse</button>
+                        <button class="tab-btn" data-cat="bandwidth" aria-label="Convertir les débits">Débit Internet</button>
                     </div>
                 </header>
 
                 <div class="card main-card">
                     <div class="unit-group">
-                        <input type="number" id="input-value" placeholder="Valeur à convertir" inputmode="decimal">
-                        <select id="select-from"></select>
+                        <input type="number" id="input-value" placeholder="Valeur à convertir" inputmode="decimal" aria-label="Valeur à convertir">
+                        <div class="select-wrapper">
+                            <input type="text" id="search-from" class="unit-search" placeholder="Rechercher..." aria-label="Rechercher une unité source">
+                            <select id="select-from" aria-label="Sélectionner l'unité source"></select>
+                            <button class="favorite-star" data-target="from" title="Ajouter aux favoris" aria-label="Marquer comme favori">
+                                <i class="ph ph-star"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="divider">
-                        <button id="btn-swap-unit" class="icon-btn">
+                        <button id="btn-swap-unit" class="icon-btn" aria-label="Inverser les unités">
                             <i class="ph ph-arrows-down-up"></i>
                         </button>
                     </div>
                     <div class="unit-group">
-                        <input type="number" id="output-value" readonly placeholder="Résultat">
-                        <select id="select-to"></select>
+                        <div class="output-wrapper">
+                            <input type="number" id="output-value" readonly placeholder="Résultat" aria-label="Résultat de la conversion">
+                            <button id="btn-copy-result" class="copy-btn" title="Copier" aria-label="Copier le résultat">
+                                <i class="ph ph-copy"></i>
+                            </button>
+                        </div>
+                        <div class="select-wrapper">
+                            <input type="text" id="search-to" class="unit-search" placeholder="Rechercher..." aria-label="Rechercher une unité cible">
+                            <select id="select-to" aria-label="Sélectionner l'unité cible"></select>
+                            <button class="favorite-star" data-target="to" title="Ajouter aux favoris" aria-label="Marquer comme favori">
+                                <i class="ph ph-star"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
 
+            <!-- PANNEAU DEVISES -->
             <section id="panel-currency" class="panel">
                 <header class="section-header">
-                    <h1>Devises Mondiale</h1>
-                    <span id="api-status" class="status-badge">Initialisation...</span>
+                    <div class="header-row">
+                        <h1>Devises Mondiale</h1>
+                        <span id="api-status" class="status-badge skeleton-loader">Chargement...</span>
+                    </div>
                 </header>
                 <div class="card main-card">
                     <div class="unit-group">
-                        <input type="number" id="curr-input" placeholder="0.00" inputmode="decimal">
-                        <select id="curr-from"></select>
+                        <input type="number" id="curr-input" placeholder="0.00" inputmode="decimal" aria-label="Montant à convertir">
+                        <div class="select-wrapper">
+                            <input type="text" id="search-curr-from" class="unit-search" placeholder="Rechercher..." aria-label="Rechercher une devise source">
+                            <select id="curr-from" aria-label="Sélectionner la devise source"></select>
+                        </div>
                     </div>
                     <div class="divider">
-                        <button id="btn-swap-curr" class="icon-btn">
+                        <button id="btn-swap-curr" class="icon-btn" aria-label="Inverser les devises">
                             <i class="ph ph-arrows-down-up"></i>
                         </button>
                     </div>
                     <div class="unit-group">
-                        <input type="number" id="curr-output" readonly placeholder="0.00">
-                        <select id="curr-to"></select>
+                        <div class="output-wrapper">
+                            <input type="number" id="curr-output" readonly placeholder="0.00" aria-label="Résultat de la conversion">
+                            <button id="btn-copy-curr" class="copy-btn" title="Copier" aria-label="Copier le résultat">
+                                <i class="ph ph-copy"></i>
+                            </button>
+                        </div>
+                        <div class="select-wrapper">
+                            <input type="text" id="search-curr-to" class="unit-search" placeholder="Rechercher..." aria-label="Rechercher une devise cible">
+                            <select id="curr-to" aria-label="Sélectionner la devise cible"></select>
+                        </div>
                     </div>
                     <div id="currency-info-box">
                         <p id="last-update" class="info-text">En attente des données...</p>
+                        <button id="btn-refresh-rates" class="text-btn" aria-label="Actualiser les taux de change">
+                            <i class="ph ph-arrows-clockwise"></i> Actualiser les taux
+                        </button>
                     </div>
                 </div>
             </section>
 
+            <!-- PANNEAU DATES -->
             <section id="panel-date" class="panel">
                 <header class="section-header">
-                    <h1>Calcul de Date</h1>
+                    <h1>Calculateur de Dates</h1>
                 </header>
                 <div class="card main-card">
                     <div class="input-block">
                         <label class="field-label">Date Initiale</label>
-                        <input type="date" id="date-start" class="full-input">
+                        <input type="date" id="date-start" class="full-input" aria-label="Date de début">
                     </div>
                     <div class="input-block" style="margin-top:20px">
                         <label class="field-label">Date Finale</label>
-                        <input type="date" id="date-end" class="full-input">
+                        <input type="date" id="date-end" class="full-input" aria-label="Date de fin">
                     </div>
                     <div class="result-box" id="date-diff-output">
                         Veuillez choisir deux dates pour calculer l'écart.
@@ -129,20 +192,139 @@
                 </div>
             </section>
 
+            <!-- PANNEAU CALCULATRICE (OPTIMISÉ PC) -->
             <section id="panel-calc" class="panel">
                 <header class="section-header">
-                    <h1>Calculatrice</h1>
-                    <button id="calc-mode-btn" class="sub-btn">Mode Scientifique</button>
-                </header>
-                <div class="calc-wrapper card">
-                    <div class="calc-screen">
-                        <div id="calc-history" class="history"></div>
-                        <div id="calc-main" class="main-val">0</div>
+                    <div class="header-row">
+                        <h1>Calculatrice</h1>
+                        <button id="calc-mode-btn" class="sub-btn" aria-label="Basculer en mode scientifique">Mode Scientifique</button>
                     </div>
-                    <div id="calc-grid" class="calc-grid"></div>
+                </header>
+                <div class="calc-layout">
+                    <div class="calc-main-area">
+                        <div class="calc-wrapper card">
+                            <div class="calc-screen">
+                                <div id="calc-history-display" class="history"></div>
+                                <div id="calc-main" class="main-val">0</div>
+                            </div>
+                            <div id="calc-grid" class="calc-grid"></div>
+                        </div>
+                    </div>
+                    <div class="calc-history-sidebar">
+                        <h3>Historique</h3>
+                        <div id="calc-history-list" class="history-list">
+                            <p class="empty-state-small">Aucun calcul</p>
+                        </div>
+                        <button id="clear-calc-history" class="text-btn-small" aria-label="Effacer l'historique">
+                            <i class="ph ph-trash"></i> Effacer
+                        </button>
+                    </div>
                 </div>
             </section>
 
+            <!-- PANNEAU OUTILS RAPIDES (NOUVEAU) -->
+            <section id="panel-tools" class="panel">
+                <header class="section-header">
+                    <h1>Outils Rapides</h1>
+                </header>
+                
+                <div class="bento-grid">
+                    <!-- IMC Calculator -->
+                    <div class="card bento-card">
+                        <div class="bento-header">
+                            <i class="ph ph-heartbeat"></i>
+                            <h3>Calculateur IMC</h3>
+                        </div>
+                        <div class="tool-content">
+                            <div class="input-row">
+                                <label>Poids (kg)</label>
+                                <input type="number" id="imc-weight" placeholder="70" inputmode="decimal" aria-label="Poids en kilogrammes">
+                            </div>
+                            <div class="input-row">
+                                <label>Taille (cm)</label>
+                                <input type="number" id="imc-height" placeholder="175" inputmode="decimal" aria-label="Taille en centimètres">
+                            </div>
+                            <button id="calc-imc" class="primary-btn" aria-label="Calculer l'IMC">Calculer</button>
+                            <div id="imc-result" class="result-display"></div>
+                        </div>
+                    </div>
+
+                    <!-- Password Generator -->
+                    <div class="card bento-card">
+                        <div class="bento-header">
+                            <i class="ph ph-key"></i>
+                            <h3>Générateur de Mots de Passe</h3>
+                        </div>
+                        <div class="tool-content">
+                            <div class="input-row">
+                                <label>Longueur</label>
+                                <input type="number" id="pwd-length" value="16" min="8" max="128" aria-label="Longueur du mot de passe">
+                            </div>
+                            <div class="checkbox-group">
+                                <label>
+                                    <input type="checkbox" id="pwd-uppercase" checked aria-label="Inclure les majuscules">
+                                    <span>Majuscules</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="pwd-numbers" checked aria-label="Inclure les chiffres">
+                                    <span>Chiffres</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="pwd-symbols" checked aria-label="Inclure les symboles">
+                                    <span>Symboles</span>
+                                </label>
+                            </div>
+                            <button id="generate-pwd" class="primary-btn" aria-label="Générer un mot de passe">Générer</button>
+                            <div class="pwd-output">
+                                <input type="text" id="pwd-result" readonly placeholder="Mot de passe..." aria-label="Mot de passe généré">
+                                <button id="copy-pwd" class="copy-btn-inline" title="Copier" aria-label="Copier le mot de passe">
+                                    <i class="ph ph-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Transfer Calculator -->
+                    <div class="card bento-card">
+                        <div class="bento-header">
+                            <i class="ph ph-download"></i>
+                            <h3>Temps de Téléchargement</h3>
+                        </div>
+                        <div class="tool-content">
+                            <div class="input-row">
+                                <label>Taille du fichier (Go)</label>
+                                <input type="number" id="file-size" placeholder="10" inputmode="decimal" aria-label="Taille du fichier en gigaoctets">
+                            </div>
+                            <div class="input-row">
+                                <label>Vitesse (Mbps)</label>
+                                <input type="number" id="connection-speed" placeholder="100" inputmode="decimal" aria-label="Vitesse de connexion en mégabits par seconde">
+                            </div>
+                            <button id="calc-download" class="primary-btn" aria-label="Calculer le temps">Calculer</button>
+                            <div id="download-result" class="result-display"></div>
+                        </div>
+                    </div>
+
+                    <!-- Unit Converter Quick -->
+                    <div class="card bento-card">
+                        <div class="bento-header">
+                            <i class="ph ph-arrows-left-right"></i>
+                            <h3>Conversion Rapide</h3>
+                        </div>
+                        <div class="tool-content">
+                            <div class="quick-convert-grid">
+                                <button class="quick-btn" data-quick="km-mi" aria-label="Convertir kilomètres en miles">km → mi</button>
+                                <button class="quick-btn" data-quick="mi-km" aria-label="Convertir miles en kilomètres">mi → km</button>
+                                <button class="quick-btn" data-quick="kg-lb" aria-label="Convertir kilogrammes en livres">kg → lb</button>
+                                <button class="quick-btn" data-quick="lb-kg" aria-label="Convertir livres en kilogrammes">lb → kg</button>
+                                <button class="quick-btn" data-quick="c-f" aria-label="Convertir Celsius en Fahrenheit">°C → °F</button>
+                                <button class="quick-btn" data-quick="f-c" aria-label="Convertir Fahrenheit en Celsius">°F → °C</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANNEAU NIVEAU -->
             <section id="panel-level" class="panel">
                 <header class="section-header">
                     <h1>Niveau</h1>
@@ -154,19 +336,21 @@
                     </div>
                     <div id="level-data" class="level-info">0°</div>
                     <p class="hint">Posez votre téléphone sur une surface plane.</p>
-                    <button id="btn-calibrate" class="text-btn">Réinitialiser l'Inclinaison</button>
+                    <button id="btn-calibrate" class="text-btn" aria-label="Réinitialiser l'inclinaison">Réinitialiser l'Inclinaison</button>
                 </div>
             </section>
 
+            <!-- PANNEAU NOTES -->
             <section id="panel-notes" class="panel">
                 <header class="section-header">
                     <h1>Notes Personnelles</h1>
                 </header>
                 <div class="card main-card notes-card">
-                    <textarea id="notes-area" placeholder="Commencez à rédiger vos notes ici... Elles seront enregistrées automatiquement."></textarea>
+                    <textarea id="notes-area" placeholder="Commencez à rédiger vos notes ici... Elles seront enregistrées automatiquement." aria-label="Zone de texte pour les notes"></textarea>
                 </div>
             </section>
 
+            <!-- PANNEAU RÉGLAGES (AVEC MODE ÉCO) -->
             <section id="panel-settings" class="panel">
                 <header class="section-header">
                     <h1>Réglages</h1>
@@ -179,10 +363,22 @@
                             <p>Choisissez entre le mode clair, sombre ou automatique.</p>
                         </div>
                         <div class="theme-switch">
-                            <button data-theme-btn="light"><i class="ph ph-sun"></i></button>
-                            <button data-theme-btn="auto" class="active"><i class="ph ph-monitor"></i></button>
-                            <button data-theme-btn="dark"><i class="ph ph-moon"></i></button>
+                            <button data-theme-btn="light" aria-label="Mode clair"><i class="ph ph-sun"></i></button>
+                            <button data-theme-btn="auto" class="active" aria-label="Mode automatique"><i class="ph ph-monitor"></i></button>
+                            <button data-theme-btn="dark" aria-label="Mode sombre"><i class="ph ph-moon"></i></button>
                         </div>
+                    </div>
+
+                    <!-- NOUVEAU : MODE ÉCO -->
+                    <div class="card setting-item eco-setting">
+                        <div class="setting-text">
+                            <h3>Mode Économie d'Énergie</h3>
+                            <p>Réduit les animations et la consommation GPU pour économiser la batterie.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-eco-mode">
+                            <span class="slider"></span>
+                        </label>
                     </div>
 
                     <div class="card setting-item">
@@ -202,38 +398,74 @@
                             <p>Modifiez la couleur principale de l'interface.</p>
                         </div>
                         <div class="accent-list">
-                            <div class="dot active" style="background:#007AFF" data-color="#007AFF"></div>
-                            <div class="dot" style="background:#FF2D55" data-color="#FF2D55"></div>
-                            <div class="dot" style="background:#34C759" data-color="#34C759"></div>
-                            <div class="dot" style="background:#AF52DE" data-color="#AF52DE"></div>
-                            <div class="dot" style="background:#FF9500" data-color="#FF9500"></div>
+                            <div class="dot active" style="background:#007AFF" data-color="#007AFF" aria-label="Bleu"></div>
+                            <div class="dot" style="background:#FF2D55" data-color="#FF2D55" aria-label="Rose"></div>
+                            <div class="dot" style="background:#34C759" data-color="#34C759" aria-label="Vert"></div>
+                            <div class="dot" style="background:#AF52DE" data-color="#AF52DE" aria-label="Violet"></div>
+                            <div class="dot" style="background:#FF9500" data-color="#FF9500" aria-label="Orange"></div>
                         </div>
                     </div>
 
-                    <button id="app-reset" class="danger-btn">Réinitialiser tous les Paramètres</button>
+                    <div class="card setting-item">
+                        <div class="setting-text">
+                            <h3>Feedback Visuel Amélioré</h3>
+                            <p>Activer les animations lors des interactions.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-haptic" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <button id="app-reset" class="danger-btn" aria-label="Réinitialiser tous les paramètres">Réinitialiser tous les Paramètres</button>
                 </div>
             </section>
         </main>
 
+        <!-- NAVIGATION MOBILE -->
         <nav class="mobile-nav">
             <div class="nav-container">
-                <button class="nav-item active" data-target="panel-convert">
+                <button class="nav-item active" data-target="panel-convert" aria-label="Mesures">
                     <i class="ph ph-swatches"></i>
                 </button>
-                <button class="nav-item" data-target="panel-currency">
+                <button class="nav-item" data-target="panel-currency" aria-label="Devises">
                     <i class="ph ph-currency-dollar"></i>
                 </button>
-                <button class="nav-item" data-target="panel-date">
-                    <i class="ph ph-calendar-blank"></i>
-                </button>
-                <button class="nav-item" data-target="panel-calc">
+                <button class="nav-item" data-target="panel-calc" aria-label="Calculatrice">
                     <i class="ph ph-calculator"></i>
                 </button>
-                <button class="nav-item" data-target="panel-settings">
+                <button class="nav-item" data-target="panel-tools" aria-label="Outils">
+                    <i class="ph ph-toolbox"></i>
+                </button>
+                <button class="nav-item" data-target="panel-settings" aria-label="Réglages">
                     <i class="ph ph-sliders"></i>
                 </button>
             </div>
         </nav>
+    </div>
+
+    <!-- MODALE HISTORIQUE -->
+    <div id="history-modal" class="modal" role="dialog" aria-labelledby="modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Historique</h2>
+                <button class="modal-close" aria-label="Fermer">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="history-list">
+                <p class="empty-state">Aucun historique pour le moment</p>
+            </div>
+            <div class="modal-footer">
+                <button id="clear-history" class="danger-btn" aria-label="Effacer l'historique">Effacer l'historique</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST (Position améliorée) -->
+    <div id="toast" class="toast" role="alert" aria-live="polite">
+        <i class="ph ph-check-circle"></i>
+        <span id="toast-message">Action effectuée</span>
     </div>
 
     <script src="script.js"></script>
